@@ -1,0 +1,64 @@
+# ------------------------
+# Flutter / Dart
+# ------------------------
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.melos_tool/
+
+# Generated files
+*.lock
+*.log
+
+# iOS / Android
+ios/Pods/
+android/.gradle/
+android/app/*.keystore
+android/key.properties
+
+# ------------------------
+# Python / Flask Backend
+# ------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+instance/
+.venv/
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+*.db
+
+# ------------------------
+# IDEs / Editors
+# ------------------------
+.idea/
+.vscode/
+*.iml
+
+# ------------------------
+# Secrets / Credentials
+# ------------------------
+.env
+*.env
+# Firebase service accounts
+Backend/*-firebase-adminsdk-*.json
+# Any JSON secrets in Backend
+Backend/secrets/*.json
+# AWS, Twilio, etc.
+*.pem
+*.key
+*.crt
+
+# ------------------------
+# Misc
+# ------------------------
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "169934755886",
+    "project_id": "airaware-8d0f7",
+    "storage_bucket": "airaware-8d0f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169934755886:android:888303c23777ea2b4367bf",
+        "android_client_info": {
+          "package_name": "com.example.aqmapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWStEzsoLjPB0LeI_toqn9u5cIqsYxVbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

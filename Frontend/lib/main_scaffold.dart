@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:aqmapp/forecast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'support.dart';
 import 'home.dart';
 import 'map.dart';
 import 'livegas.dart';
@@ -147,17 +147,17 @@ Widget build(BuildContext context) {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.warning_amber_rounded),
-              title: const Text('Help'),
-              onTap: () {
-                Navigator.pop(bottomSheetContext);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('')),
-                  );
-                }
-              },
-            ),
+  leading: const Icon(Icons.warning_amber_rounded),
+  title: const Text('Support'),
+  onTap: () {
+    Navigator.pop(bottomSheetContext); // Close the bottom sheet
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SupportPage()),
+    );
+  },
+),
+
           ],
         );
       },

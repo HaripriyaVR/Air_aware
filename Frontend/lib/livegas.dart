@@ -1,240 +1,16 @@
-/*import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'home.dart';
-import 'map.dart';
-import 'profile.dart';
-import 'forecast.dart';
-import 'package:intl/intl.dart';
-import 'utils/sensor_name_mapper.dart';
 
-
-class LiveGasPage extends StatefulWidget {
-  final String? phone;
-  const LiveGasPage({super.key, this.phone});
-
-  @override
-  State<LiveGasPage> createState() => _LiveGasPageState();
-}
-
-class _LiveGasPageState extends State<LiveGasPage> {
-  Map<String, dynamic> liveData = {};
-  Timer? _timer;
-  bool isLoggedIn = false;
-  String? phoneNumber;
-
-  final String apiUrl = 'http://172.29.255.104:5000/realtime';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLoginState();
-    _fetch();
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _fetch());
-  }
-
-  Future<void> _loadLoginState() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-      phoneNumber = prefs.getString('phone');
-    });
-  }
-
-  Future<void> _fetch() async {
-    try {
-      final res = await http.get(Uri.parse(apiUrl));
-      if (res.statusCode == 200) {
-        setState(() => liveData = jsonDecode(res.body));
-      } else {
-        debugPrint("HTTP ${res.statusCode}");
-      }
-    } catch (e) {
-      debugPrint("Fetch error: $e");
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _showMenuOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext bottomSheetContext) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.cloud_outlined),
-              title: const Text(''),
-              onTap: () async {
-                Navigator.pop(bottomSheetContext);
-                try {
-                  if (context.mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ForecastDataPage(forecastData: {}),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to load forecast: $e')),
-                    );
-                  }
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.warning_amber_rounded),
-              title: const Text('Help'),
-              onTap: () {
-                Navigator.pop(bottomSheetContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('')),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-
-Widget buildSensorCard(Map<String, dynamic> sensor) {
-  final readings = sensor['readings'] as Map;
-
-  // Extract raw values
-  String dateStr = sensor['date'] ?? '';
-  String timeStr = sensor['time'] ?? '';
-
-  // Parse date manually since format is "dd:MM:yyyy"
-  DateTime? parsedDate;
-  try {
-    List<String> parts = dateStr.split(':');
-    if (parts.length == 3) {
-      int day = int.parse(parts[0]);
-      int month = int.parse(parts[1]);
-      int year = int.parse(parts[2]);
-      parsedDate = DateTime(year, month, day);
-    }
-  } catch (e) {
-    debugPrint("Date parsing error: $e");
-  }
-
-  // Format date
-  String formattedDate = parsedDate != null
-      ? DateFormat('dd MMM yyyy').format(parsedDate)
-      : dateStr;
-
-  // ✅ Map raw sensor_id -> friendly name
-  final String sensorId = sensor['sensor_id'] ?? 'Unknown';
-  final String displaySensor = SensorNameMapper.displayName(sensorId);
-
-  return Card(
-    margin: const EdgeInsets.symmetric(vertical: 8),
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            displaySensor, // ✅ show Station 1 / Station 2
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Last Update: $formattedDate $timeStr",
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const Divider(),
-          ...readings.entries.map(
-            (e) => Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(e.key.toUpperCase()),
-                Text(
-                  e.value.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: liveData.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: liveData.values
-                  .map<Widget>((v) => buildSensorCard(v as Map<String, dynamic>))
-                  .toList(),
-            ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Devices"),
-          if (isLoggedIn)
-            const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-        ],
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (_) => AQIDashboardPage(phone: widget.phone),
-            ));
-          } else if (index == 1) {
-            Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (_) => SensorMapPage(phone: widget.phone),
-            ));
-          } else if (isLoggedIn && index == 3) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
-            ));
-          } else if (index == (isLoggedIn ? 4 : 3)) {
-            _showMenuOptions(context);
-          }
-        },
-      ),
-    );
-  }
-}
-*/
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'main_scaffold.dart';
 import 'home.dart';
 import 'map.dart';
 import 'profile.dart';
 import 'forecast.dart';
 import 'package:intl/intl.dart';
 import 'utils/sensor_name_mapper.dart';
+import 'support.dart';
 
 class LiveGasPage extends StatefulWidget {
   final String? phone;
@@ -250,6 +26,7 @@ class _LiveGasPageState extends State<LiveGasPage> {
   bool isLoggedIn = false;
   String? phoneNumber;
   String? selectedStation; // ✅ Selected station
+  int _selectedIndex = 2;
 
   final String apiUrl = 'http://192.168.43.104:5000/realtime';
 
@@ -439,224 +216,93 @@ class _LiveGasPageState extends State<LiveGasPage> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
+        currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         items: [
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: "Home"),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.devices), label: "Devices"),
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
+          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Devices"),
           if (isLoggedIn)
-            const BottomNavigationBarItem(
-                icon: Icon(Icons.person), label: "Profile"),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.menu), label: "Menu"),
+            const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
         ],
         onTap: (index) {
           if (index == 0) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        AQIDashboardPage(phone: widget.phone)));
+            Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (_) => AQIDashboardPage(phone: widget.phone),
+            ));
           } else if (index == 1) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => SensorMapPage(phone: widget.phone)));
+            Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (_) => SensorMapPage(phone: widget.phone),
+            ));
           } else if (isLoggedIn && index == 3) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        ProfilePage(phone: phoneNumber ?? "Unknown")));
+            Navigator.push(context, MaterialPageRoute(
+              builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
+            ));
+          } else if ((!isLoggedIn && index == 3) || index == 4) {
+            _showMenuOptions(context);
           }
+          setState(() {
+            _selectedIndex = index;
+          });
         },
       ),
     );
   }
-}
-/*
-@override
-Widget build(BuildContext context) {
-  final bool loggedIn = isLoggedIn;
-  final int profileIndex = loggedIn ? 3 : -1;
-  final int menuIndex = loggedIn ? 4 : 3;
-
-  final List<BottomNavigationBarItem> navItems = [
-    const BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Home'),
-    const BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-    const BottomNavigationBarItem(icon: Icon(Icons.sensors), label: 'Devices'),
-    if (loggedIn)
-      const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-    const BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Menu'),
-  ];
-
-  String? selectedSensorId =
-      selectedStation != null ? stationMap[selectedStation] : null;
-  Map<String, dynamic>? selectedData =
-      selectedSensorId != null ? liveData[selectedSensorId] : null;
-
-  return Scaffold(
-    appBar: AppBar(title: const Text("Devices")),
-    body: Column(
-      children: [
-        // ✅ Station buttons
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: stationMap.keys.map((station) {
-              return SizedBox(
-                width: MediaQuery.of(context).size.width / 2.3,
-                height: 60,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedStation == station
-                        ? Colors.teal
-                        : Colors.blueGrey.shade100,
-                    foregroundColor: selectedStation == station
-                        ? Colors.white
-                        : Colors.black,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15)),
-                    elevation: 4,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      selectedStation = station;
-                    });
-                  },
-                  child: Text(
-                    station,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-
-        // ✅ Show station data or "under construction"
-        Expanded(
-          child: selectedStation == null
-              ? const Center(
-                  child: Text("Select a station to view data",
-                      style: TextStyle(fontSize: 16)))
-              : (selectedData != null
-                  ? ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [buildSensorCard(selectedData)],
-                    )
-                  : const Center(
-                      child: Text("This station is under construction 🚧",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500)))),
-        ),
-      ],
-    ),
-    bottomNavigationBar: BottomNavigationBar(
-      currentIndex: 2,
-      selectedItemColor: Colors.teal,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      items: navItems,
-      onTap: (index) {
-        if (index == 2) return; // Already on Devices
-
-        if (index == 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (_) => AQIDashboardPage(phone: widget.phone)),
-          );
-        } else if (index == 1) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (_) => SensorMapPage(phone: widget.phone)),
-          );
-        } else if (loggedIn && index == profileIndex) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => MainScaffold(
-                body: ProfilePage(phone: phoneNumber ?? "Unknown"),
-                currentIndex: profileIndex,
-                phone: phoneNumber,
-              ),
-            ),
-          );
-        } else if (index == menuIndex) {
-          _showMenuOptions(context);
-        }
-      },
-    ),
-  );
-}
-
-
-
 void _showMenuOptions(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (BuildContext bottomSheetContext) {
-      return Wrap(
-        children: <Widget>[
-          ListTile(
-            leading: const Icon(Icons.cloud_outlined),
-            title: const Text('AQI Forecast'),
-            onTap: () async {
-              Navigator.pop(bottomSheetContext);
-              try {
-                final forecastData = await fetchForecast();
-                if (context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ForecastDataPage(forecastData: forecastData),
-                    ),
-                  );
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext bottomSheetContext) {
+        return Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.cloud_outlined),
+              title: const Text('AQI Forecast'),
+              onTap: () async {
+                Navigator.pop(bottomSheetContext);
+                try {
+                  Map<String, dynamic> forecastData = await fetchForecast();
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ForecastDataPage(forecastData: forecastData),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to load forecast: $e')),
+                    );
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to load forecast: $e')),
-                  );
-                }
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.warning_amber_rounded),
-            title: const Text('Help'),
-            onTap: () {
-              Navigator.pop(bottomSheetContext);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Help section coming soon')),
-                );
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-}
+              },
+            ),
+            ListTile(
+  leading: const Icon(Icons.warning_amber_rounded),
+  title: const Text('Support'),
+  onTap: () {
+    Navigator.pop(bottomSheetContext); // Close the bottom sheet
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SupportPage()),
+    );
+  },
+),
 
-Future<Map<String, dynamic>> fetchForecast() async {
+          ],
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchForecast() async {
     final response = await http.get(Uri.parse('http://192.168.43.104:5000/forecast'));
 
     if (response.statusCode == 200) {
@@ -678,4 +324,4 @@ Future<Map<String, dynamic>> fetchForecast() async {
       throw Exception('Failed to fetch forecast data');
     }
   }
-*/
+}

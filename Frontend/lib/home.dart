@@ -11,7 +11,7 @@ import 'map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/sensor_name_mapper.dart';
-
+import 'support.dart';
 
 // Example usage inside a widget
 
@@ -112,31 +112,35 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
     return R * c;
   }
 
-  /*Future<String?> _getClosestSensor(Position pos) async {
-    String? closest;
-    double minDist = double.infinity;
-    _sensorLocations.forEach((id, sensorPos) {
-      final d = _distanceKm(
-        pos.latitude,
-        pos.longitude,
-        sensorPos['lat']!,
-        sensorPos['lon']!,
-      );
-      print('[DISTANCE] Sensor: $id, Distance: ${d.toStringAsFixed(3)} km');
-      if (d < minDist) {
-        minDist = d;
-        closest = id;
-      }
-    });
-
-    if (minDist > 2.0) {
-      print('[INFO] No sensors found within 2 km.');
-      return null;
-    }
-
-    return closest;
-  }*/
+  
   Future<String?> _getClosestSensor(Position pos) async {
+  String? closest;
+  double minDist = double.infinity;
+
+  _sensorLocations.forEach((id, sensorPos) {
+    final d = _distanceKm(
+      pos.latitude,
+      pos.longitude,
+      sensorPos['lat']!,
+      sensorPos['lon']!,
+    );
+    debugPrint(
+      '[DISTANCE] Sensor: ${SensorNameMapper.displayName(id)} ($id), '
+      'Distance: ${d.toStringAsFixed(3)} km',
+    );
+    if (d < minDist) {
+      minDist = d;
+      closest = id;
+    }
+  });
+
+  debugPrint('[INFO] Closest sensor is ${SensorNameMapper.displayName(closest!)} '
+             'at ${minDist.toStringAsFixed(3)} km');
+  return closest; // ✅ Always return closest, no 2 km constraint
+}
+
+  
+  /*Future<String?> _getClosestSensor(Position pos) async {
   String? closest;
   double minDist = double.infinity;
 
@@ -160,58 +164,9 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
     return null;
   }
   return closest;
-}
+}*/
 
 
-  /*Future<Map<String, dynamic>?> _fetchRealtimeAQI() async {
-    try {
-      Position? userLocation = currentLocation ?? await getUserLocation();
-      if (userLocation == null) {
-        debugPrint('[AQI] Could not get user location');
-        return null;
-      }
-      
-      if (currentLocation == null) {
-        setState(() {
-          currentLocation = userLocation;
-        });
-      }
-
-      String? sensorId = await _getClosestSensor(userLocation);
-      if (sensorId == null) {
-        debugPrint('[AQI] No nearby sensors found');
-        return null;
-      }
-
-      final uri = Uri.parse('$_baseUrl$_endpoint?sensor_id=$sensorId');
-      final response = await http.get(uri);
-      if (response.statusCode != 200) {
-        debugPrint('[AQI] API request failed: ${response.statusCode}');
-        return null;
-      }
-
-      Map<String, dynamic> sensorData = Map<String, dynamic>.from(jsonDecode(response.body));
-      sensorData['sensorId'] = sensorId;
-
-      Map<String, dynamic> readings = sensorData['readings'] as Map<String, dynamic>? ?? {};
-      sensorData['temp'] = readings['temp']?.toString() ?? 'N/A';
-      sensorData['hum'] = readings['hum']?.toString() ?? 'N/A';
-      sensorData['pre'] = readings['pre']?.toString() ?? 'N/A';
-
-      final now = DateTime.now();
-      final dateFormatter = DateFormat('MMM dd, yyyy');
-      final timeFormatter = DateFormat('HH:mm:ss');
-      sensorData['date'] = dateFormatter.format(now);
-      sensorData['time'] = timeFormatter.format(now);
-
-      debugPrint('[AQI] Successfully fetched data');
-      return sensorData;
-
-    } catch (e) {
-      debugPrint('[AQI] Error fetching AQI: $e');
-      return null;
-    }
-  }*/
   Future<Map<String, dynamic>?> _fetchRealtimeAQI() async {
   try {
     Position? userLocation = currentLocation ?? await getUserLocation();
@@ -620,15 +575,17 @@ final String pm10 = data['readings']?['pm10']?.toString() ?? "N/A";
               },
             ),
             ListTile(
-              leading: const Icon(Icons.warning_amber_rounded),
-              title: const Text('Help'),
-              onTap: () {
-                Navigator.pop(bottomSheetContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('')),
-                );
-              },
-            ),
+  leading: const Icon(Icons.warning_amber_rounded),
+  title: const Text('Support'),
+  onTap: () {
+    Navigator.pop(bottomSheetContext); // Close the bottom sheet
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SupportPage()),
+    );
+  },
+),
+
           ],
         );
       },

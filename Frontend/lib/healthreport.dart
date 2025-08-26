@@ -105,7 +105,7 @@ class _ProfilePageState extends State<HealthProfilePage> {
 
   Future<void> fetchAQI(double lat, double lon) async {
     if (_isDisposed) return;
-    final url = Uri.parse('http://192.168.43.104:5000/user-aqi?lat=$lat&lon=$lon');
+    final url = Uri.parse('http://10.112.193.104:5000/user-aqi?lat=$lat&lon=$lon');
 
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 30));
@@ -440,6 +440,8 @@ class _ProfilePageState extends State<HealthProfilePage> {
           ),
         ),
       ),
+      
     );
   }
+
 }

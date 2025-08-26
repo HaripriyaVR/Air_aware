@@ -11,6 +11,7 @@ import 'forecast.dart';
 import 'package:intl/intl.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
+import 'config.dart';
 
 class LiveGasPage extends StatefulWidget {
   final String? phone;
@@ -28,7 +29,9 @@ class _LiveGasPageState extends State<LiveGasPage> {
   String? selectedStation; // ✅ Selected station
   int _selectedIndex = 2;
 
-  final String apiUrl = 'http://192.168.43.104:5000/realtime';
+  final String _baseUrl = AppConfig.baseUrl;  
+static const String _endpoint = '/api/realtime';  
+
 
   // ✅ Station -> Sensor ID mapping
   final Map<String, String> stationMap = {
@@ -55,97 +58,127 @@ class _LiveGasPageState extends State<LiveGasPage> {
     });
   }
 
-  /// ✅ Fetch data for all stations by calling /realtime?sensor_id=xxx
-  Future<void> _fetch() async {
-    try {
-      Map<String, dynamic> newData = {};
+/// ✅ Fetch data for all stations by calling /api/realtime?sensor_id=xxx
+Future<void> _fetch() async {
+  try {
+    Map<String, dynamic> newData = {};
 
-      for (var entry in stationMap.entries) {
-        final sensorId = entry.value;
-        final url = "$apiUrl?sensor_id=$sensorId";
+    for (var entry in stationMap.entries) {
+      final sensorId = entry.value;
+      final url = "$_baseUrl$_endpoint?sensor_id=$sensorId";
 
-        final res = await http.get(Uri.parse(url));
-        if (res.statusCode == 200) {
-          final decoded = jsonDecode(res.body);
-          newData[sensorId] = decoded;
-        } else {
-          debugPrint("HTTP ${res.statusCode} for $sensorId");
-        }
+      final res = await http.get(Uri.parse(url));
+      if (res.statusCode == 200) {
+        final decoded = jsonDecode(res.body);
+        //debugPrint("✅ Data for $sensorId: $decoded"); 
+        newData[sensorId] = decoded['data'];
+      } else {
+        debugPrint("HTTP ${res.statusCode} for $sensorId");
       }
-
-      setState(() {
-        liveData = newData;
-      });
-    } catch (e) {
-      debugPrint("Fetch error: $e");
     }
+
+    setState(() {
+      liveData = newData;
+    });
+  } catch (e) {
+    debugPrint("Fetch error: $e");
   }
+}
+
 
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
+Widget buildSensorCard(Map<String, dynamic> sensor) {
+  final readings = sensor['readings'];
 
-  Widget buildSensorCard(Map<String, dynamic> sensor) {
-    final readings = sensor['readings'] as Map;
-
-    String dateStr = sensor['date'] ?? '';
-    String timeStr = sensor['time'] ?? '';
-
-    DateTime? parsedDate;
-    try {
-      List<String> parts = dateStr.split(':');
-      if (parts.length == 3) {
-        parsedDate = DateTime(
-            int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
-      }
-    } catch (e) {
-      debugPrint("Date parsing error: $e");
-    }
-
-    String formattedDate = parsedDate != null
-        ? DateFormat('dd MMM yyyy').format(parsedDate)
-        : dateStr;
-
-    final String sensorId = sensor['sensor_id'] ?? 'Unknown';
-    final String displaySensor = SensorNameMapper.displayName(sensorId);
-
+  // ✅ Handle missing/invalid readings
+  if (readings == null || readings is! Map<String, dynamic>) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              displaySensor,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text("Last Update: $formattedDate $timeStr",
-                style: const TextStyle(color: Colors.grey)),
-            const Divider(),
-            ...readings.entries.map(
-              (e) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(e.key.toUpperCase()),
-                  Text(
-                    e.value.toString(),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.teal),
-                  ),
-                ],
-              ),
-            ),
-          ],
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          "⚠️ No readings available",
+          style: TextStyle(fontSize: 16, color: Colors.redAccent),
         ),
       ),
     );
   }
+
+  final Map<String, dynamic> readingsMap = readings;
+
+  // ✅ Date parsing
+  String dateStr = sensor['date'] ?? '';
+  String timeStr = sensor['time'] ?? '';
+
+  DateTime? parsedDate;
+  try {
+    final parts = dateStr.split(':');
+    if (parts.length == 3) {
+      parsedDate = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+    }
+  } catch (e) {
+    debugPrint("Date parsing error: $e");
+  }
+
+  final String formattedDate = parsedDate != null
+      ? DateFormat('dd MMM yyyy').format(parsedDate)
+      : dateStr;
+
+  final String sensorId = sensor['sensor_id'] ?? 'Unknown';
+  final String displaySensor = SensorNameMapper.displayName(sensorId);
+
+  // ✅ Card UI
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    elevation: 6,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            displaySensor,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            "Last Update: $formattedDate $timeStr",
+            style: const TextStyle(color: Colors.grey),
+          ),
+          const Divider(),
+          ...readingsMap.entries.map(
+            (entry) => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(entry.key.toUpperCase()),
+                Text(
+                  entry.value.toString(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+
 
 @override
   Widget build(BuildContext context) {
@@ -223,7 +256,7 @@ class _LiveGasPageState extends State<LiveGasPage> {
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Devices"),
+          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
           if (isLoggedIn)
             const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
@@ -303,11 +336,18 @@ void _showMenuOptions(BuildContext context) {
   }
 
   Future<Map<String, dynamic>> fetchForecast() async {
-    final response = await http.get(Uri.parse('http://192.168.43.104:5000/forecast'));
+  final response = await http.get(
+    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
+  );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> rawForecast = data['forecast'];
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+
+    // Build a new map of forecasts for each sensor
+    final Map<String, dynamic> forecasts = {};
+
+    data.forEach((sensor, sensorData) {
+      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
 
       final List<Map<String, dynamic>> filteredForecast = rawForecast
           .where((item) =>
@@ -316,12 +356,15 @@ void _showMenuOptions(BuildContext context) {
           .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
           .toList();
 
-      return {
+      forecasts[sensor] = {
         'forecast': filteredForecast,
-        'updated_at': data['updated_at'],
+        'updated_at': sensorData['updated_at'],
       };
-    } else {
-      throw Exception('Failed to fetch forecast data');
-    }
+    });
+
+    return forecasts;
+  } else {
+    throw Exception('Failed to fetch forecast data');
   }
+}
 }

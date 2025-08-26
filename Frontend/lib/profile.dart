@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'main_scaffold.dart';
 import 'healthreport.dart';
+import 'config.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? phone;
@@ -91,87 +92,90 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> fetchAQI(double lat, double lon) async {
+  if (_isDisposed) return;
+
+  // ✅ Use AppConfig + API route
+  final String baseUrl = AppConfig.baseUrl; 
+  const String endpoint = "/api/user-aqi"; // ✅ API prefixed route
+  final url = Uri.parse("$baseUrl$endpoint?lat=$lat&lon=$lon");
+
+  print("[Profile] Attempting to fetch AQI from: ${url.toString()}");
+  print("[Profile] Location coordinates: lat=$lat, lon=$lon");
+
+  try {
+    print("[Profile] Sending GET request...");
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+      },
+    ).timeout(
+      const Duration(seconds: 30),
+      onTimeout: () {
+        print("[Profile] Request timed out after 30 seconds");
+        throw TimeoutException('AQI request timed out');
+      },
+    );
+
+    print("[Profile] Response status code: ${response.statusCode}");
+    print("[Profile] Response headers: ${response.headers}");
+    print("[Profile] Response body: ${response.body}");
+
     if (_isDisposed) return;
 
-    // Use your actual deployed backend URL here
-    final url = Uri.parse('http://192.168.43.104:5000/user-aqi?lat=$lat&lon=$lon');
-    print("[Profile] Attempting to fetch AQI from: ${url.toString()}");
-    print("[Profile] Location coordinates: lat=$lat, lon=$lon");
-
-    try {
-      print("[Profile] Sending GET request...");
-      final response = await http.get(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      ).timeout(
-        const Duration(seconds: 30),  // Increased timeout
-        onTimeout: () {
-          print("[Profile] Request timed out after 30 seconds");
-          throw TimeoutException('AQI request timed out');
-        },
-      );
-      
-      print("[Profile] Response status code: ${response.statusCode}");
-      print("[Profile] Response headers: ${response.headers}");
-      print("[Profile] Response body: ${response.body}");
-
-      if (_isDisposed) return;
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (mounted) {
-          setState(() {
-            aqi = (data["user_aqi"] != null) ? data["user_aqi"].toDouble() : null;
-            aqiStatus = data["status"];
-          });
-          print("[Profile] Successfully fetched AQI: $aqi ($aqiStatus)");
-        }
-      } else if (response.statusCode == 404) {
-        print("[Profile] No AQI data available: ${response.body}");
-        if (mounted) {
-          setState(() {
-            aqi = null;
-            aqiStatus = "No AQI data available - You are too far from our sensors";
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("No AQI data available for your location. You must be within 2km of a sensor."),
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        }
-      } else {
-        print("[Profile] Failed to fetch AQI: ${response.statusCode}");
-        if (response.body.isNotEmpty) {
-          print("[Profile] Response body: ${response.body}");
-        }
-        if (mounted) {
-          setState(() {
-            aqi = null;
-            aqiStatus = "Unable to fetch AQI data";
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to fetch AQI data: HTTP ${response.statusCode}")),
-          );
-        }
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (mounted) {
+        setState(() {
+          aqi = (data["user_aqi"] != null) ? data["user_aqi"].toDouble() : null;
+          aqiStatus = data["status"];
+        });
+        print("[Profile] Successfully fetched AQI: $aqi ($aqiStatus)");
       }
-    } catch (e) {
-      if (!_isDisposed) {
-        print("[Profile] Error fetching AQI: $e");
-        if (mounted) {
-          setState(() {
-            aqiStatus = "Error fetching AQI data";
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error fetching AQI data: ${e.toString()}")),
-          );
-        }
+    } else if (response.statusCode == 404) {
+      print("[Profile] No AQI data available: ${response.body}");
+      if (mounted) {
+        setState(() {
+          aqi = null;
+          aqiStatus = "No AQI data available - You are too far from our sensors";
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("No AQI data available for your location. You must be within 2km of a sensor."),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } else {
+      print("[Profile] Failed to fetch AQI: ${response.statusCode}");
+      if (response.body.isNotEmpty) {
+        print("[Profile] Response body: ${response.body}");
+      }
+      if (mounted) {
+        setState(() {
+          aqi = null;
+          aqiStatus = "Unable to fetch AQI data";
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to fetch AQI data: HTTP ${response.statusCode}")),
+        );
+      }
+    }
+  } catch (e) {
+    if (!_isDisposed) {
+      print("[Profile] Error fetching AQI: $e");
+      if (mounted) {
+        setState(() {
+          aqiStatus = "Error fetching AQI data";
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error fetching AQI data: ${e.toString()}")),
+        );
       }
     }
   }
+}
+
 
   Color getAqiColor(double aqi) {
     if (aqi <= 50) return Colors.green.shade100;

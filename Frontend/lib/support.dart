@@ -196,6 +196,7 @@ import 'home.dart';
 import 'map.dart';
 import 'profile.dart';
 import 'forecast.dart';
+import 'config.dart';
 
 class SupportPage extends StatefulWidget {
   final String? phone; // ✅ to keep navigation consistent
@@ -233,13 +234,19 @@ class _SupportPageState extends State<SupportPage> {
     });
   }
 
-  // 🔹 Forecast fetch
   Future<Map<String, dynamic>> fetchForecast() async {
-    final response = await http.get(Uri.parse('http://192.168.43.104:5000/forecast'));
+  final response = await http.get(
+    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
+  );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> rawForecast = data['forecast'];
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+
+    // Build a new map of forecasts for each sensor
+    final Map<String, dynamic> forecasts = {};
+
+    data.forEach((sensor, sensorData) {
+      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
 
       final List<Map<String, dynamic>> filteredForecast = rawForecast
           .where((item) =>
@@ -248,14 +255,17 @@ class _SupportPageState extends State<SupportPage> {
           .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
           .toList();
 
-      return {
+      forecasts[sensor] = {
         'forecast': filteredForecast,
-        'updated_at': data['updated_at'],
+        'updated_at': sensorData['updated_at'],
       };
-    } else {
-      throw Exception('Failed to fetch forecast data');
-    }
+    });
+
+    return forecasts;
+  } else {
+    throw Exception('Failed to fetch forecast data');
   }
+}
 
   // 🔹 Submit Support Case
   Future<void> _submitSupportCase() async {
@@ -482,7 +492,7 @@ class _SupportPageState extends State<SupportPage> {
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Devices"),
+          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
           if (isLoggedIn)
             const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),

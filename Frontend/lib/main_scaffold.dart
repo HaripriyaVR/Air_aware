@@ -7,6 +7,7 @@ import 'home.dart';
 import 'map.dart';
 import 'livegas.dart';
 import 'profile.dart';
+import 'config.dart';
 
 class MainScaffold extends StatelessWidget {
   final Widget body;
@@ -22,28 +23,7 @@ class MainScaffold extends StatelessWidget {
 
   bool get isLoggedIn => phone != null && phone!.isNotEmpty;
 
-  Future<Map<String, dynamic>> fetchForecast() async {
-    final response = await http.get(Uri.parse('http://192.168.43.104:5000/forecast'));
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> rawForecast = data['forecast'];
-
-      final List<Map<String, dynamic>> filteredForecast = rawForecast
-          .where((item) =>
-              !(item['day'].toString().toLowerCase().contains('today') ||
-                item['day'].toString().toLowerCase().contains('tomorrow')))
-          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
-          .toList();
-
-      return {
-        'forecast': filteredForecast,
-        'updated_at': data['updated_at'],
-      };
-    } else {
-      throw Exception('Failed to fetch forecast data');
-    }
-  }
+  
 
 @override
 Widget build(BuildContext context) {
@@ -54,7 +34,7 @@ Widget build(BuildContext context) {
   final List<BottomNavigationBarItem> navItems = [
     const BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Home'),
     const BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-    const BottomNavigationBarItem(icon: Icon(Icons.sensors), label: 'Devices'),
+    const BottomNavigationBarItem(icon: Icon(Icons.sensors), label: 'Stations'),
     if (isLoggedIn)
       const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
     const BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Menu'),
@@ -163,4 +143,36 @@ Widget build(BuildContext context) {
       },
     );
   }
+Future<Map<String, dynamic>> fetchForecast() async {
+  final response = await http.get(
+    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
+  );
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+
+    // Build a new map of forecasts for each sensor
+    final Map<String, dynamic> forecasts = {};
+
+    data.forEach((sensor, sensorData) {
+      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
+
+      final List<Map<String, dynamic>> filteredForecast = rawForecast
+          .where((item) =>
+              !(item['day'].toString().toLowerCase().contains('today') ||
+                item['day'].toString().toLowerCase().contains('tomorrow')))
+          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
+          .toList();
+
+      forecasts[sensor] = {
+        'forecast': filteredForecast,
+        'updated_at': sensorData['updated_at'],
+      };
+    });
+
+    return forecasts;
+  } else {
+    throw Exception('Failed to fetch forecast data');
+  }
+}
 }

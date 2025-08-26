@@ -297,6 +297,8 @@ class _SensorMapPageState extends State<SensorMapPage> {
   final List<Map<String, dynamic>> sensors = [
     {"id": "lora-v1", "lat": 10.178385739668958, "lng": 76.43052237497399},
     {"id": "loradev2", "lat": 10.17095090340159, "lng": 76.42962876824544},
+    {"id": "lora-v3", "lat": 10.165, "lng": 76.420}, // New sensor
+
   ];
 
   Map<String, dynamic> sensorAqi = {};

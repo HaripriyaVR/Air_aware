@@ -636,6 +636,7 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
   final Map<String, Map<String, double>> _sensorLocations = {
     'lora-v1': {'lat': 10.178385739668958, 'lon': 76.43052237497399},
     'loradev2': {'lat': 10.17095090340159, 'lon': 76.42962876824544},
+    'lora-v3': {'lat': 10.165, 'lon': 76.420} // Example coordinates for new sensor
   };
 
   Future<Map<String, dynamic>?>? _aqiFuture;

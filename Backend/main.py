@@ -479,7 +479,7 @@ AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 DDB_TABLE_NAME = os.getenv("DYNAMODB_TABLE", "GasReadings")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
-SENSOR_IDS = ["lora-v1", "loradev2"]
+SENSOR_IDS = ["lora-v1", "loradev2", "lora-v3"]
 
 # ───── Twilio Config ─────
 DEFAULT_OTP = os.getenv("DEFAULT_OTP", "123456")
@@ -506,6 +506,7 @@ deserializer = TypeDeserializer()
 SENSOR_LOCATIONS = {
     "lora-v1": {"lat": 10.178385739668958, "lon": 76.43052237497399},
     "loradev2": {"lat": 10.17095090340159, "lon": 76.42962876824544},
+    "lora-v3": {"lat": 10.165, "lon": 76.420},
 }
 
 # ───── Flask Setup ─────
@@ -706,14 +707,19 @@ def get_realtime():
     or all sensors if no sensor_id is provided.
     """
     sensor_id = request.args.get("sensor_id")
+    print(f"📡 Incoming /realtime request, sensor_id={sensor_id}")  # ✅ Debug
 
     if sensor_id:
+        print(f"🔍 Fetching latest data for sensor_id={sensor_id}")
         data = latest_from_dynamo(sensor_id)
+        print(f"➡️ Result from Dynamo for {sensor_id}: {data}")  # ✅ Debug
+
         if data:
             return jsonify({
                 "success": True,
                 "data": data
             }), 200
+        print(f"⚠️ No data found for {sensor_id}")  # ✅ Debug
         return jsonify({
             "success": False,
             "message": f"No data found for sensor_id={sensor_id}"
@@ -722,21 +728,25 @@ def get_realtime():
     # No sensor_id → return all sensors
     all_data = {}
     for sid in SENSOR_IDS:
+        print(f"🔍 Fetching data for sensor_id={sid}")  # ✅ Debug
         d = latest_from_dynamo(sid)
+        print(f"➡️ Result for {sid}: {d}")  # ✅ Debug
+
         if d:
             all_data[sid] = d
 
     if not all_data:
+        print("⚠️ No sensor data available in Dynamo!")  # ✅ Debug
         return jsonify({
             "success": False,
             "message": "No sensor data available"
         }), 404
 
+    print(f"✅ Returning realtime data for sensors: {list(all_data.keys())}")  # ✅ Debug
     return jsonify({
         "success": True,
         "data": all_data
     }), 200
-
 
 
 
@@ -797,7 +807,8 @@ def verify_otp():
 def get_forecast_data():
     s3_keys = {
         "lora-v1": "data/air_quality/latest_forecast_lora_v1.json",
-        "loradev2": "data/air_quality/latest_forecast_loradev2.json"
+        "loradev2": "data/air_quality/latest_forecast_loradev2.json",
+        "lora-v3": "data/air_quality/latest_forecast_lora-v3.json"
     }
 
     forecasts = {}

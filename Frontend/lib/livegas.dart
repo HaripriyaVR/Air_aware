@@ -37,9 +37,9 @@ static const String _endpoint = '/api/realtime';
   final Map<String, String> stationMap = {
     "Station 1": "lora-v1",
     "Station 2": "loradev2",
-    "Station 3": "loradev3",
-    "Station 4": "loradev4",
-    "Station 5": "loradev5",
+    "Station 3": "lora-v3",
+    "Station 4": "lora-v4",
+    "Station 5": "lora-v5",
   };
 
   @override

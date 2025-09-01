@@ -613,6 +613,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart';
+import 'admin/login.dart';
 
 // Example usage inside a widget
 
@@ -822,6 +823,54 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+  backgroundColor: Colors.white,
+  elevation: 1,
+  title: const Text("", style: TextStyle(color: Colors.black)),
+  iconTheme: const IconThemeData(color: Colors.black),
+
+  // 👈 Left side Admin button
+  leading: TextButton.icon(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminLoginPage()),
+      );
+    },
+    icon: const Icon(Icons.admin_panel_settings, color: Colors.teal),
+    label: const Text(
+      "Admin",
+      style: TextStyle(color: Colors.teal),
+    ),
+  ),
+
+  // 👉 Right side Login/Logout buttons
+  actions: [
+    if (!isLoggedIn)
+      TextButton.icon(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        },
+        icon: const Icon(Icons.login, color: Colors.teal),
+        label: const Text("Login", style: TextStyle(color: Colors.teal)),
+      )
+    else
+      TextButton.icon(
+        onPressed: () async {
+          await logout();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Logged out")),
+          );
+        },
+        icon: const Icon(Icons.logout, color: Colors.red),
+        label: const Text("Logout", style: TextStyle(color: Colors.red)),
+      ),
+  ],
+),
+
+      /*appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         title: const Text("", style: TextStyle(color: Colors.black)),
@@ -847,7 +896,7 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
               label: const Text("Logout", style: TextStyle(color: Colors.red)),
             ),
         ],
-      ),
+      ),*/
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<Map<String, dynamic>?>(

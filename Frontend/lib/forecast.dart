@@ -464,6 +464,9 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
     if (!_isLoggedIn) {
       return const Scaffold(body: SizedBox.shrink());
     }
+     final sortedKeys = widget.forecastData.keys.toList()
+  ..sort((a, b) => SensorNameMapper.displayName(a)
+      .compareTo(SensorNameMapper.displayName(b)));
 
     // ✅ New: Handle multiple sensors
     final sensorData = widget.forecastData[selectedSensor];
@@ -493,21 +496,25 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
         title: const Text(""),
         actions: [
           // ✅ Sensor selector
-          DropdownButton<String>(
+         
+DropdownButton<String>(
   value: selectedSensor,
   underline: const SizedBox(),
-  items: widget.forecastData.keys.map((sensorKey) {
-    return DropdownMenuItem(
+  items: sortedKeys.map((sensorKey) {
+    return DropdownMenuItem<String>(
       value: sensorKey,
-      child: Text(SensorNameMapper.displayName(sensorKey)), // ✅ use display name
+      child: Text(SensorNameMapper.displayName(sensorKey)),
     );
   }).toList(),
   onChanged: (val) {
     if (val != null) {
-      setState(() => selectedSensor = val);
+      setState(() {
+        selectedSensor = val;
+      });
     }
   },
-)
+),
+
 
         ],
       ),

@@ -1,7 +1,6 @@
-
 import 'dart:convert';
 import 'dart:async';
-import 'package:universal_io/io.dart' as io;             // <— replaces dart:io
+import 'package:universal_io/io.dart' as io; // replaces dart:io
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,13 +11,10 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:printing/printing.dart';                   // <— added
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-// import 'dart:html' as html; // <— removed
+import 'package:printing/printing.dart';
+import '../config.dart';
+
+
 
 class HealthProfilePage extends StatefulWidget {
   const HealthProfilePage({Key? key}) : super(key: key);
@@ -32,14 +28,17 @@ class _ProfilePageState extends State<HealthProfilePage> {
   String name = '';
   int healthScore = 0;
   String riskLevel = '';
-  double? aqi;
-  String aqiStatus = '';
+
+  // ✅ Correct AQI fields
+  double? userAqi;
+  String userAqiStatus = '';
+
   String combinedRisk = '';
   String recommendation = '';
   bool isLoading = true;
   bool _isDisposed = false;
 
-  final GlobalKey _printKey = GlobalKey(); // For capturing screenshot
+  final GlobalKey _printKey = GlobalKey();
 
   @override
   void initState() {
@@ -63,7 +62,7 @@ class _ProfilePageState extends State<HealthProfilePage> {
         return;
       }
 
-      // Fetch name
+      // 🔹 Fetch name
       final regSnap = await FirebaseFirestore.instance
           .collection('register')
           .where('phone', isEqualTo: phone)
@@ -72,7 +71,7 @@ class _ProfilePageState extends State<HealthProfilePage> {
         name = regSnap.docs.first.data()['name'] ?? '';
       }
 
-      // Fetch health score
+      // 🔹 Fetch health score
       final qSnap = await FirebaseFirestore.instance
           .collection('questionnaire')
           .where('phone', isEqualTo: phone)
@@ -82,18 +81,17 @@ class _ProfilePageState extends State<HealthProfilePage> {
         riskLevel = qSnap.docs.first.data()['riskLevel'] ?? '';
       }
 
-      // Get location (ask permission as needed in your app)
+      // 🔹 Get location
       Location location = Location();
       LocationData locData = await location.getLocation();
       double lat = locData.latitude ?? 0;
       double lon = locData.longitude ?? 0;
 
-      // Fetch AQI
-      await fetchAQI(lat, lon);
+      // 🔹 Fetch user AQI instead of generic AQI
+      await _fetchUserAQI(lat, lon);
 
-      // keep combinedRisk & recommendation in state if we have aqi
-      if (aqi != null) {
-        combinedRisk = getCombinedRisk(healthScore, aqi!.toInt());
+      if (userAqi != null) {
+        combinedRisk = getCombinedRisk(healthScore, userAqi!.toInt());
         recommendation = getRecommendation(combinedRisk);
       }
     } catch (e) {
@@ -103,52 +101,98 @@ class _ProfilePageState extends State<HealthProfilePage> {
     }
   }
 
-  Future<void> fetchAQI(double lat, double lon) async {
-    if (_isDisposed) return;
-    final url = Uri.parse('http://10.112.193.104:5000/user-aqi?lat=$lat&lon=$lon');
-
+  /// ✅ Fetch AQI for user location
+  Future<void> _fetchUserAQI(double lat, double lon) async {
     try {
-      final response = await http.get(url).timeout(const Duration(seconds: 30));
-      if (_isDisposed) return;
+      final url = Uri.parse("${AppConfig.userAqi}?lat=$lat&lon=$lon");
+      debugPrint("📡 Fetching User AQI from: $url");
+
+      final response = await http.get(url);
+      debugPrint("📥 User AQI Response [${response.statusCode}]: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (mounted) {
-          setState(() {
-            aqi = (data["user_aqi"] != null) ? data["user_aqi"].toDouble() : null;
-            aqiStatus = data["status"] ?? '';
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            aqi = null;
-            aqiStatus = "Unable to fetch AQI data";
-          });
-        }
-      }
-    } catch (e) {
-      if (!_isDisposed && mounted) {
         setState(() {
-          aqiStatus = "Error fetching AQI data";
+          userAqi = (data["user_aqi"] != null)
+              ? data["user_aqi"].toDouble()
+              : null;
+          userAqiStatus = data["status"] ?? '';
+        });
+        debugPrint("✅ User AQI updated: $userAqi ($userAqiStatus)");
+      } else {
+        setState(() {
+          userAqi = null;
+          userAqiStatus = "Unable to fetch AQI";
         });
       }
+    } catch (e) {
+      setState(() {
+        userAqi = null;
+        userAqiStatus = "Error fetching AQI";
+      });
+      debugPrint("❌ Error fetching User AQI: $e");
     }
   }
+  // inside _ProfilePageState
 
-  Map<String, String> getRiskLevel(int score) {
-    if (score <= 25) {
-      return {'level': 'Low', 'color': '#4CAF50'}; // Green
-    } else if (score <= 50) {
-      return {'level': 'Moderate', 'color': '#FF9800'}; // Orange
-    } else if (score <= 75) {
-      return {'level': 'High', 'color': '#F44336'}; // Red
-    } else {
-      return {'level': 'Critical', 'color': '#B71C1C'}; // Dark Red
-    }
+Future<void> _downloadPdf() async {
+  try {
+    final pdf = pw.Document();
+
+    final String localCombined = (combinedRisk.isNotEmpty)
+        ? combinedRisk
+        : (userAqi != null ? getCombinedRisk(healthScore, userAqi!.toInt()) : 'Unknown');
+
+    final String combinedRec = getRecommendation(localCombined);
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Padding(
+          padding: const pw.EdgeInsets.all(20),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("Health Report",
+                  style: pw.TextStyle(
+                      fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 20),
+              pw.Text("Name: $name"),
+              pw.Text("Phone: ${phone ?? ''}"),
+              pw.SizedBox(height: 20),
+              pw.Text("Health Score: $healthScore"),
+              pw.Text("Health Risk Level: $riskLevel"),
+              pw.SizedBox(height: 20),
+              pw.Text("User AQI: ${userAqi?.toStringAsFixed(0) ?? 'N/A'}"),
+              pw.Text("AQI Status: $userAqiStatus"),
+              pw.SizedBox(height: 20),
+              pw.Text("Combined Risk: $localCombined"),
+              pw.Text("Recommendation: $combinedRec"),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final outputDir = await getApplicationDocumentsDirectory();
+    final file = io.File("${outputDir.path}/health_report.pdf");
+
+    await file.writeAsBytes(await pdf.save());
+    await OpenFilex.open(file.path);
+  } catch (e) {
+    debugPrint("❌ Error generating PDF: $e");
+  }
+}
+
+
+  // --- Helpers for health/aqi/risk ---
+  Map<String, String> getRiskLevel(int score) { /* unchanged */ 
+    if (score <= 25) return {'level': 'Low', 'color': '#4CAF50'};
+    else if (score <= 50) return {'level': 'Moderate', 'color': '#FF9800'};
+    else if (score <= 75) return {'level': 'High', 'color': '#F44336'};
+    return {'level': 'Critical', 'color': '#B71C1C'};
   }
 
-  Map<String, dynamic> getAqiLevel(int aqiValue) {
+  Map<String, dynamic> getAqiLevel(int aqiValue) { /* unchanged */ 
     final List<Map<String, dynamic>> levels = [
       {"label": "Good", "color": Colors.green, "min": 0, "max": 50},
       {"label": "Satisfactory", "color": Colors.yellow, "min": 51, "max": 100},
@@ -157,54 +201,13 @@ class _ProfilePageState extends State<HealthProfilePage> {
       {"label": "Very Poor", "color": Colors.purple, "min": 301, "max": 400},
       {"label": "Severe", "color": Colors.brown, "min": 401, "max": 500},
     ];
-
     return levels.firstWhere(
-      (level) =>
-          aqiValue >= (level['min'] as num) &&
-          aqiValue <= (level['max'] as num),
-      orElse: () => {
-        "label": "Unknown",
-        "color": Colors.grey,
-        "min": 0,
-        "max": 0
-      },
+      (l) => aqiValue >= l['min'] && aqiValue <= l['max'],
+      orElse: () => {"label": "Unknown", "color": Colors.grey},
     );
   }
 
-  String getHealthRecommendation(String risk) {
-    switch (risk) {
-      case "Low":
-        return "Great health score! Keep up the healthy habits.";
-      case "Moderate":
-        return "Some improvements can be made in lifestyle and diet.";
-      case "High":
-        return "Consider medical advice and lifestyle adjustments.";
-      case "Critical":
-        return "Seek professional medical guidance immediately.";
-      default:
-        return "";
-    }
-  }
-
-  String getAqiRecommendation(String level) {
-    switch (level) {
-      case "Good":
-      case "Satisfactory":
-        return "Air quality is fine. Enjoy outdoor activities.";
-      case "Moderate":
-        return "Sensitive groups should limit prolonged outdoor activity.";
-      case "Poor":
-        return "Avoid outdoor activities if possible.";
-      case "Very Poor":
-        return "Stay indoors, use air purifiers.";
-      case "Severe":
-        return "Serious health risk. Avoid exposure completely.";
-      default:
-        return "";
-    }
-  }
-
-  String getCombinedRisk(int healthScore, int userAqi) {
+  String getCombinedRisk(int healthScore, int userAqi) { /* unchanged */ 
     String healthRisk;
     if (healthScore <= 25) healthRisk = "Low";
     else if (healthScore <= 50) healthRisk = "Moderate";
@@ -219,13 +222,16 @@ class _ProfilePageState extends State<HealthProfilePage> {
     else if (userAqi <= 300) aqiRisk = "Very Unhealthy";
     else aqiRisk = "Hazardous";
 
-    int combinedScore = {
-      "Low": 1, "Moderate": 2, "High": 3, "Critical": 4
-    }[healthRisk]! +
-    {
-      "Good": 1, "Moderate": 2, "Unhealthy for Sensitive Groups": 3,
-      "Unhealthy": 4, "Very Unhealthy": 5, "Hazardous": 6
-    }[aqiRisk]!;
+    int combinedScore =
+        {"Low": 1, "Moderate": 2, "High": 3, "Critical": 4}[healthRisk]! +
+        {
+          "Good": 1,
+          "Moderate": 2,
+          "Unhealthy for Sensitive Groups": 3,
+          "Unhealthy": 4,
+          "Very Unhealthy": 5,
+          "Hazardous": 6
+        }[aqiRisk]!;
 
     if (combinedScore <= 3) return "Low";
     if (combinedScore <= 6) return "Moderate";
@@ -233,215 +239,170 @@ class _ProfilePageState extends State<HealthProfilePage> {
     return "Critical";
   }
 
-  String getRecommendation(String risk) {
+  String getRecommendation(String risk) { /* unchanged */ 
     switch (risk) {
-      case "Low":
-        return "You are in good health and air quality is fine. Maintain your lifestyle.";
-      case "Moderate":
-        return "Some precautions are advised. Limit prolonged outdoor activity.";
-      case "High":
-        return "Reduce strenuous outdoor activities. Wear a mask if needed.";
-      case "Critical":
-        return "Avoid outdoor exposure, use air purifiers, and seek medical advice if unwell.";
-      default:
-        return "";
+      case "Low": return "You are in good health and air quality is fine.";
+      case "Moderate": return "Take precautions. Limit prolonged outdoor activity.";
+      case "High": return "Reduce strenuous outdoor activities. Wear a mask.";
+      case "Critical": return "Avoid outdoor exposure, use purifiers, seek medical help.";
     }
+    return "";
   }
 
-  // capture visible widget and download exact page as PDF (works web + mobile/desktop)
-  Future<void> _downloadPDF() async {
-    try {
-      RenderRepaintBoundary boundary =
-          _printKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+ 
 
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final pdf = pw.Document();
-      final imageWidget = pw.MemoryImage(pngBytes);
-
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          build: (pw.Context context) => pw.Center(
-            child: pw.Image(imageWidget, fit: pw.BoxFit.contain),
-          ),
-        ),
-      );
-
-      final pdfBytes = await pdf.save();
-
-      if (kIsWeb) {
-        // Web: share/download without dart:html
-        await Printing.sharePdf(
-          bytes: pdfBytes,
-          filename: "health_report.pdf",
-        );
-      } else {
-        // Mobile/desktop: save & open
-        final dir = await getApplicationDocumentsDirectory();
-        final file = io.File("${dir.path}/health_report.pdf");
-        await file.writeAsBytes(pdfBytes);
-        await OpenFilex.open(file.path);
-      }
-    } catch (e) {
-      debugPrint("Error capturing PDF: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create PDF: $e')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    final healthData = getRiskLevel(healthScore);
-    final aqiData = (aqi != null) ? getAqiLevel(aqi!.toInt()) : {"label": "N/A", "color": Colors.grey};
-
-    // compute local combined values in build (don't call setState here)
-    final String localCombined = (combinedRisk.isNotEmpty)
-        ? combinedRisk
-        : (aqi != null ? getCombinedRisk(healthScore, aqi!.toInt()) : 'Unknown');
-    final String combinedRec = getRecommendation(localCombined);
-
+@override
+Widget build(BuildContext context) {
+  if (isLoading) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Health Report"),
-        backgroundColor: Colors.teal,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: _downloadPDF,
-          )
-        ],
+      body: Center(
+        child: CircularProgressIndicator(
+          color: Colors.teal, // ✅ Use a fixed color if you want
+        ),
       ),
-      body: RepaintBoundary(
-        key: _printKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // User row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    );
+  }
+
+  final healthData = getRiskLevel(healthScore);
+  final aqiData = (userAqi != null)
+      ? getAqiLevel(userAqi!.toInt())
+      : {"label": "N/A", "color": Colors.grey};
+
+  final String localCombined = (combinedRisk.isNotEmpty)
+      ? combinedRisk
+      : (userAqi != null
+          ? getCombinedRisk(healthScore, userAqi!.toInt())
+          : 'Unknown');
+
+  final String combinedRec = getRecommendation(localCombined);
+
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text("Health Report"),
+      backgroundColor: Colors.teal,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.download),
+          tooltip: "Download Report",
+          onPressed: () async {
+            final pdf = pw.Document();
+
+            pdf.addPage(
+              pw.Page(
+                pageFormat: PdfPageFormat.a4,
+                build: (pw.Context context) {
+                  return pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text(phone ?? "", style: const TextStyle(fontSize: 16)),
+                      pw.Text("Health Report",
+                          style: pw.TextStyle(
+                              fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 16),
+                      pw.Text("Name: $name"),
+                      pw.Text("Phone: ${phone ?? ''}"),
+                      pw.SizedBox(height: 16),
+                      pw.Text("Health Score: $healthScore"),
+                      pw.Text("Health Risk Level: ${healthData['level']}"),
+                      pw.SizedBox(height: 16),
+                      pw.Text("User AQI: ${userAqi?.toStringAsFixed(0) ?? 'N/A'}"),
+                      pw.Text("AQI Level: ${aqiData['label']}"),
+                      pw.SizedBox(height: 16),
+                      pw.Text("Combined Risk: $localCombined"),
+                      pw.Text("Recommendation: $combinedRec"),
                     ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // --- 1) Health Score Section ---
-                  Text("Health Score", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      CircularPercentIndicator(
-                        radius: 60,
-                        lineWidth: 10,
-                        percent: (healthScore.clamp(0, 100)) / 100.0,
-                        center: Text("$healthScore", style: const TextStyle(fontSize: 18)),
-                        progressColor: Color(int.parse("0xFF${healthData['color']!.substring(1)}")),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Risk Level: ${healthData['level']}",
-                              style: TextStyle(
-                                color: Color(int.parse("0xFF${healthData['color']!.substring(1)}")),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(getHealthRecommendation(healthData['level']!), style: const TextStyle(fontSize: 14)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-                  const Divider(),
-
-                  // --- 2) AQI Section ---
-                  const SizedBox(height: 8),
-                  Text("User AQI", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      CircularPercentIndicator(
-                        radius: 60,
-                        lineWidth: 10,
-                        percent: (aqi != null && aqi! <= 500) ? (aqi! / 500.0) : 0,
-                        center: Text("${aqi?.toStringAsFixed(0) ?? 'N/A'}", style: const TextStyle(fontSize: 18)),
-                        progressColor: aqiData['color'],
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "AQI Level: ${aqiData['label']}",
-                              style: TextStyle(
-                                color: aqiData['color'],
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(getAqiRecommendation(aqiData['label']), style: const TextStyle(fontSize: 14)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-                  const Divider(),
-
-                  // --- 3) Combined Risk Section ---
-                  const SizedBox(height: 8),
-                  Text("Combined Risk", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(
-                    localCombined,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: localCombined == "Critical"
-                          ? Colors.red
-                          : localCombined == "High"
-                              ? Colors.orange
-                              : localCombined == "Moderate"
-                                  ? Colors.amber
-                                  : Colors.green,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(combinedRec, style: const TextStyle(fontSize: 14)),
-                ],
+                  );
+                },
               ),
+            );
+
+            // ✅ Save or share the PDF
+            await Printing.sharePdf(
+              bytes: await pdf.save(),
+              filename: "health_report.pdf",
+            );
+          },
+        ),
+      ],
+    ),
+    body: RepaintBoundary(
+      key: _printKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- User Info ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(name,
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(phone ?? "", style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // --- Health Score ---
+                Text("Health Score",
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    CircularPercentIndicator(
+                      radius: 60,
+                      lineWidth: 10,
+                      percent: (healthScore.clamp(0, 100)) / 100.0,
+                      center: Text("$healthScore"),
+                      progressColor: Color(
+                          int.parse("0xFF${healthData['color']!.substring(1)}")),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text("Risk Level: ${healthData['level']}"),
+                    ),
+                  ],
+                ),
+                const Divider(),
+
+                // --- User AQI ---
+                Text("User AQI",
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    CircularPercentIndicator(
+                      radius: 60,
+                      lineWidth: 10,
+                      percent: (userAqi != null && userAqi! <= 500)
+                          ? (userAqi! / 500.0)
+                          : 0,
+                      center: Text("${userAqi?.toStringAsFixed(0) ?? 'N/A'}"),
+                      progressColor: aqiData['color'],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text("AQI Level: ${aqiData['label']}"),
+                    ),
+                  ],
+                ),
+                const Divider(),
+
+                // --- Combined Risk ---
+                Text("Combined Risk: $localCombined"),
+                Text(combinedRec),
+              ],
             ),
           ),
         ),
       ),
-      
-    );
-  }
-
+    ),
+  );
+}
 }

@@ -274,12 +274,12 @@ Widget build(BuildContext context) {
               }
             },
           ),
-          buildProfileCard(
+          /*buildProfileCard(
             icon: Icons.group_add,
             title: "Add Family",
             color: Colors.green.shade100,
             onTap: () {},
-          ),
+          ),*/
         ],
       ),
     ),

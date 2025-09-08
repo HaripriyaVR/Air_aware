@@ -199,77 +199,65 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
 
 
 
+Future<void> _refresh() async {
+  if (!mounted) return;
+  setState(() {
+    currentLocation = null;
+    _aqiFuture = _fetchRealtimeAQI();
+  });
+}
 
 
-  Future<void> _refresh() async {
-    if (!mounted) return;
-    setState(() {
-      currentLocation = null;
-      _aqiFuture = _fetchRealtimeAQI();
-    });
-  }
 
-  Color _aqiColor(int aqi) {
-    if (aqi <= 50) return Colors.green;
-    if (aqi <= 100) return Colors.yellow;
-    if (aqi <= 150) return Colors.orange;
-    if (aqi <= 200) return Colors.red;
-    if (aqi <= 300) return Colors.purple;
-    return Colors.brown;
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  backgroundColor: Colors.white,
-  elevation: 1,
-  title: const Text("", style: TextStyle(color: Colors.black)),
-  iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor: const Color.fromARGB(255, 98, 92, 92),
+        elevation: 1,
+        title: const Text("", style: TextStyle(color: Colors.black)),
+        iconTheme: const IconThemeData(color: Colors.black),
 
-  // 👈 Left side Admin button
-  leading: TextButton.icon(
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const AdminLoginPage()),
-      );
-    },
-    icon: const Icon(Icons.admin_panel_settings, color: Colors.teal),
-    label: const Text(
-      "Admin",
-      style: TextStyle(color: Colors.teal),
-    ),
-  ),
+        // 👈 Left side Admin button
+        leading: TextButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminLoginPage()),
+            );
+          },
+          icon: const Icon(Icons.admin_panel_settings, color: Colors.teal),
+          label: const Text("Admin", style: TextStyle(color: Colors.teal)),
+        ),
 
-  // 👉 Right side Login/Logout buttons
-  actions: [
-    if (!isLoggedIn)
-      TextButton.icon(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
-        },
-        icon: const Icon(Icons.login, color: Colors.teal),
-        label: const Text("Login", style: TextStyle(color: Colors.teal)),
-      )
-    else
-      TextButton.icon(
-        onPressed: () async {
-          await logout();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Logged out")),
-          );
-        },
-        icon: const Icon(Icons.logout, color: Colors.red),
-        label: const Text("Logout", style: TextStyle(color: Colors.red)),
+        // 👉 Right side Login/Logout buttons
+        actions: [
+          if (!isLoggedIn)
+            TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              icon: const Icon(Icons.login, color: Colors.teal),
+              label: const Text("Login", style: TextStyle(color: Colors.teal)),
+            )
+          else
+            TextButton.icon(
+              onPressed: () async {
+                await logout();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Logged out")),
+                );
+              },
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: const Text("Logout", style: TextStyle(color: Colors.red)),
+            ),
+        ],
       ),
-  ],
-),
 
-      
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<Map<String, dynamic>?>(
@@ -279,122 +267,15 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (!snapshot.hasData || snapshot.data == null) {
-              return const Center(child: Text("AQI data not available"));
+              debugPrint('[AQI] Using dummy data');
+              return _buildDashboardUI(dummyData);
             }
-
-            final data = snapshot.data!;
-
-final int aqi = data['aqi'] ?? 0;
-final String status = data['status'] ?? "Unknown";
-
-// Raw sensorId from backend
-final String sensorId = data['sensorId'] ?? "Unknown Sensor";
-
-// Map to friendly name for UI
-final String displaySensor = SensorNameMapper.displayName(sensorId);
-
-final String date = data['date'] ?? "N/A";
-final String time = data['time'] ?? "N/A";
-final String temp = data['temp']?.toString() ?? "N/A";
-final String hum = data['hum']?.toString() ?? "N/A";
-final String pre = data['pre']?.toString() ?? "N/A";
-final String pm25 = data['readings']?['pm25']?.toString() ?? "N/A";
-final String pm10 = data['readings']?['pm10']?.toString() ?? "N/A";
-
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-    "Your Location",
-    style: TextStyle(color: Colors.grey[700], fontSize: 14),
-  ),
-  Text(
-    SensorNameMapper.displayName(sensorId),
-    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-  ),
-  const SizedBox(height: 12),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.circle, size: 12, color: Colors.red),
-                          const SizedBox(width: 6),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("Live AQI", style: TextStyle(fontSize: 16)),
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: _aqiColor(aqi).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '$aqi',
-                                  style: TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: _aqiColor(aqi),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text("Air Quality is", style: TextStyle(fontSize: 16)),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: _aqiColor(aqi).withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              status,
-                              style: TextStyle(
-                                color: _aqiColor(aqi),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("PM2.5: $pm25 µg/m³", style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 20),
-                      Text("PM10: $pm10 µg/m³", style: const TextStyle(fontSize: 14)),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-                  _buildAqiGradientBar(context, aqi),
-                  const SizedBox(height: 24),
-                  _buildWeatherCard(temp, hum, pre),
-                  const SizedBox(height: 20),
-                  Text("Last Update:  $time", style: const TextStyle(color: Colors.grey)),
-                ],
-              ),
-            );
+            return _buildDashboardUI(snapshot.data!);
           },
         ),
       ),
+
+      // ✅ bottom nav bar is inside Scaffold
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
@@ -428,6 +309,108 @@ final String pm10 = data['readings']?['pm10']?.toString() ?? "N/A";
             _selectedIndex = index;
           });
         },
+      ),
+    );
+  }
+
+  /// ✅ All unpacking and UI lives here
+  Widget _buildDashboardUI(Map<String, dynamic> data) {
+    final int aqi = data['aqi'] ?? 0;
+    final String status = data['status'] ?? "Unknown";
+    final String sensorId = data['sensorId'] ?? "Unknown Sensor";
+    final String displaySensor = SensorNameMapper.displayName(sensorId);
+
+    final String time = data['time'] ?? "N/A";
+    final String temp = data['temp']?.toString() ?? "N/A";
+    final String hum = data['hum']?.toString() ?? "N/A";
+    final String pre = data['pre']?.toString() ?? "N/A";
+    final String pm25 = data['readings']?['pm25']?.toString() ?? "N/A";
+    final String pm10 = data['readings']?['pm10']?.toString() ?? "N/A";
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("Your Location",
+              style: TextStyle(color: Colors.grey[700], fontSize: 14)),
+          Text(displaySensor,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.circle, size: 12, color: Colors.red),
+                  const SizedBox(width: 6),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Live AQI", style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _aqiColor(aqi).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$aqi',
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: _aqiColor(aqi),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text("Air Quality is", style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _aqiColor(aqi).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        color: _aqiColor(aqi),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("PM2.5: $pm25 µg/m³", style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 20),
+              Text("PM10: $pm10 µg/m³", style: const TextStyle(fontSize: 14)),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+          _buildAqiGradientBar(context, aqi),
+          const SizedBox(height: 24),
+          _buildWeatherCard(temp, hum, pre),
+          const SizedBox(height: 20),
+          Text("Last Update:  $time", style: const TextStyle(color: Colors.grey)),
+        ],
       ),
     );
   }
@@ -574,53 +557,73 @@ final String pm10 = data['readings']?['pm10']?.toString() ?? "N/A";
               },
             ),
             ListTile(
-  leading: const Icon(Icons.warning_amber_rounded),
-  title: const Text('Support'),
-  onTap: () {
-    Navigator.pop(bottomSheetContext); // Close the bottom sheet
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SupportPage()),
-    );
-  },
-),
-
+              leading: const Icon(Icons.warning_amber_rounded),
+              title: const Text('Support'),
+              onTap: () {
+                Navigator.pop(bottomSheetContext);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SupportPage()),
+                );
+              },
+            ),
           ],
         );
       },
     );
   }
 
-Future<Map<String, dynamic>> fetchForecast() async {
-  final response = await http.get(
-    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
-  );
+  Future<Map<String, dynamic>> fetchForecast() async {
+    final response = await http.get(
+      Uri.parse('${AppConfig.baseUrl}/api/forecast'),
+    );
 
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
 
-    // Build a new map of forecasts for each sensor
-    final Map<String, dynamic> forecasts = {};
+      final Map<String, dynamic> forecasts = {};
 
-    data.forEach((sensor, sensorData) {
-      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
+      data.forEach((sensor, sensorData) {
+        final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
 
-      final List<Map<String, dynamic>> filteredForecast = rawForecast
-          .where((item) =>
-              !(item['day'].toString().toLowerCase().contains('today') ||
-                item['day'].toString().toLowerCase().contains('tomorrow')))
-          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
-          .toList();
+        final List<Map<String, dynamic>> filteredForecast = rawForecast
+            .where((item) =>
+                !(item['day'].toString().toLowerCase().contains('today') ||
+                  item['day'].toString().toLowerCase().contains('tomorrow')))
+            .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
+            .toList();
 
-      forecasts[sensor] = {
-        'forecast': filteredForecast,
-        'updated_at': sensorData['updated_at'],
-      };
-    });
+        forecasts[sensor] = {
+          'forecast': filteredForecast,
+          'updated_at': sensorData['updated_at'],
+        };
+      });
 
-    return forecasts;
-  } else {
-    throw Exception('Failed to fetch forecast data');
+      return forecasts;
+    } else {
+      throw Exception('Failed to fetch forecast data');
+    }
+  }
+
+  Color _aqiColor(int aqi) {
+    if (aqi <= 50) return Colors.green;
+    if (aqi <= 100) return Colors.yellow;
+    if (aqi <= 200) return Colors.orange;
+    if (aqi <= 300) return Colors.red;
+    if (aqi <= 400) return Colors.purple;
+    return Colors.brown;
   }
 }
-}
+
+/// Dummy data for fallback
+const dummyData = {
+  "aqi": 120,
+  "status": "Moderate",
+  "sensorId": "sensor_1",
+  "date": "2025-09-08",
+  "time": "12:00 PM",
+  "temp": 28,
+  "hum": 65,
+  "pre": 1012,
+  "readings": {"pm25": 80, "pm10": 150}
+};

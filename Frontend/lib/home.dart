@@ -214,7 +214,7 @@ Future<void> _refresh() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 98, 92, 92),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 1,
         title: const Text("", style: TextStyle(color: Colors.black)),
         iconTheme: const IconThemeData(color: Colors.black),
@@ -228,7 +228,7 @@ Future<void> _refresh() async {
             );
           },
           icon: const Icon(Icons.admin_panel_settings, color: Colors.teal),
-          label: const Text("Admin", style: TextStyle(color: Colors.teal)),
+          label: const Text("", style: TextStyle(color: Colors.teal)),
         ),
 
         // 👉 Right side Login/Logout buttons

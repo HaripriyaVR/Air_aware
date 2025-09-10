@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:aqmapp/forecast.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'questions.dart';
@@ -8,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'main_scaffold.dart';
 import 'healthreport.dart';
 import 'config.dart';
+
 
 class ProfilePage extends StatefulWidget {
   final String? phone;
@@ -27,6 +29,7 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     fetchUserData();
     getUserLocationAndFetchAQI();
+     
   }
 
   void fetchUserData() async {
@@ -194,14 +197,16 @@ Widget build(BuildContext context) {
     currentIndex: 3, // 👈 set this to the correct index for Profile in your BottomNavigationBar
     body: Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Profile",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
+  title: const Icon(
+    Icons.person, // 👈 Profile icon
+    color: Colors.black,
+    size: 28,
+  ),
+  centerTitle: true,
+  backgroundColor: Colors.white,
+  elevation: 0,
+),
+
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -274,18 +279,86 @@ Widget build(BuildContext context) {
               }
             },
           ),
-          /*buildProfileCard(
-            icon: Icons.group_add,
-            title: "Add Family",
-            color: Colors.green.shade100,
-            onTap: () {},
-          ),*/
+          buildProfileCard(
+  icon: Icons.trending_up,
+  title: "Forecast Data",
+  color: Colors.green.shade100,
+  onTap: () async {
+    try {
+      // show a loading spinner while fetching
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // fetch forecast only on click
+      final data = await fetchForecast();
+
+      // close loading dialog
+      Navigator.pop(context);
+
+      // navigate with fetched forecast
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ForecastDataPage(
+            forecastData: data,
+            phone: widget.phone,
+          ),
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context); // close loader
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load forecast: $e")),
+      );
+    }
+  },
+),
+
+
         ],
       ),
     ),
     ),
   );
 }
+
+Future<Map<String, dynamic>> fetchForecast() async {
+  final response = await http.get(
+    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
+  );
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+
+    // Build a new map of forecasts for each sensor
+    final Map<String, dynamic> forecasts = {};
+
+    data.forEach((sensor, sensorData) {
+      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
+
+      final List<Map<String, dynamic>> filteredForecast = rawForecast
+          .where((item) =>
+              !(item['day'].toString().toLowerCase().contains('today') ||
+                item['day'].toString().toLowerCase().contains('tomorrow')))
+          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
+          .toList();
+
+      forecasts[sensor] = {
+        'forecast': filteredForecast,
+        'updated_at': sensorData['updated_at'],
+      };
+    });
+
+    return forecasts;
+  } else {
+    throw Exception('Failed to fetch forecast data');
+  }
+}
+
+
 Widget buildProfileCard({
     required IconData icon,
     required String title,

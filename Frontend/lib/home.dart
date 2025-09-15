@@ -38,7 +38,7 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
     'loradev2': {'lat': 10.17095090340159, 'lon': 76.42962876824544},
     'lora-v3': {'lat': 10.165, 'lon': 76.420} // Example coordinates for new sensor
   };
-
+  
   Future<Map<String, dynamic>?>? _aqiFuture;
 
   @override
@@ -314,106 +314,100 @@ Future<void> _refresh() async {
   }
 
   /// ✅ All unpacking and UI lives here
-  Widget _buildDashboardUI(Map<String, dynamic> data) {
-    final int aqi = data['aqi'] ?? 0;
-    final String status = data['status'] ?? "Unknown";
-    final String sensorId = data['sensorId'] ?? "Unknown Sensor";
-    final String displaySensor = SensorNameMapper.displayName(sensorId);
+Widget _buildDashboardUI(Map<String, dynamic> data) {
+  final int aqi = data['aqi'] ?? 0;
+  final String status = data['status'] ?? "Unknown";
+  final String sensorId = data['sensorId'] ?? "Unknown Sensor";
+  final String displaySensor = SensorNameMapper.displayName(sensorId);
 
-    final String time = data['time'] ?? "N/A";
-    final String temp = data['temp']?.toString() ?? "N/A";
-    final String hum = data['hum']?.toString() ?? "N/A";
-    final String pre = data['pre']?.toString() ?? "N/A";
-    final String pm25 = data['readings']?['pm25']?.toString() ?? "N/A";
-    final String pm10 = data['readings']?['pm10']?.toString() ?? "N/A";
+  final String time = data['time'] ?? "N/A";
+  final String temp = data['temp']?.toString() ?? "N/A";
+  final String hum = data['hum']?.toString() ?? "N/A";
+  final String pre = data['pre']?.toString() ?? "N/A";
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text("Your Location",
-              style: TextStyle(color: Colors.grey[700], fontSize: 14)),
-          Text(displaySensor,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 12),
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text("Your Location",
+            style: TextStyle(color: Colors.grey[700], fontSize: 14)),
+        Text(displaySensor,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.circle, size: 12, color: Colors.red),
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("Live AQI", style: TextStyle(fontSize: 16)),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: _aqiColor(aqi).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '$aqi',
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: _aqiColor(aqi),
-                          ),
+        // AQI Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.circle, size: 12, color: Colors.red),
+                const SizedBox(width: 6),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Live AQI", style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _aqiColor(aqi).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$aqi',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: _aqiColor(aqi),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text("Air Quality is", style: TextStyle(fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _aqiColor(aqi).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        color: _aqiColor(aqi),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
+                  ],
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text("Air Quality is", style: TextStyle(fontSize: 16)),
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _aqiColor(aqi).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      color: _aqiColor(aqi),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
+        ),
 
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("PM2.5: $pm25 µg/m³", style: const TextStyle(fontSize: 14)),
-              const SizedBox(width: 20),
-              Text("PM10: $pm10 µg/m³", style: const TextStyle(fontSize: 14)),
-            ],
-          ),
+        const SizedBox(height: 24),
+        _buildAqiGradientBar(context, aqi),
+        const SizedBox(height: 24),
+        _buildWeatherCard(temp, hum, pre),
+        const SizedBox(height: 20),
+        Text("Last Update:  $time",
+            style: const TextStyle(color: Colors.grey)),
+      ],
+    ),
+  );
+}
 
-          const SizedBox(height: 24),
-          _buildAqiGradientBar(context, aqi),
-          const SizedBox(height: 24),
-          _buildWeatherCard(temp, hum, pre),
-          const SizedBox(height: 20),
-          Text("Last Update:  $time", style: const TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildAqiGradientBar(BuildContext context, int aqi) {
     final levels = [

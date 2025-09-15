@@ -33,6 +33,7 @@ class _LiveGasPageState extends State<LiveGasPage> {
 static const String _endpoint = '/api/realtime';  
 
 
+
   // ✅ Station -> Sensor ID mapping
   final Map<String, String> stationMap = {
     "Station 1": "lora-v1",
@@ -91,10 +92,12 @@ Future<void> _fetch() async {
     _timer?.cancel();
     super.dispose();
   }
+
+
+
 Widget buildSensorCard(Map<String, dynamic> sensor) {
   final readings = sensor['readings'];
 
-  // ✅ Handle missing/invalid readings
   if (readings == null || readings is! Map<String, dynamic>) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -112,7 +115,6 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
 
   final Map<String, dynamic> readingsMap = readings;
 
-  // ✅ Date parsing
   String dateStr = sensor['date'] ?? '';
   String timeStr = sensor['time'] ?? '';
 
@@ -137,7 +139,77 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
   final String sensorId = sensor['sensor_id'] ?? 'Unknown';
   final String displaySensor = SensorNameMapper.displayName(sensorId);
 
-  // ✅ Card UI
+  final Map<String, String> unitsMap = {
+    'co': 'µg/m³',
+    'co2': 'µg/m³',
+    'so2': 'µg/m³',
+    'no2': 'µg/m³',
+    'o3': 'µg/m³',
+    'pm2_5': 'µg/m³',
+    'pm10': 'µg/m³',
+    'temperature': '°C',
+    'temp': '°C',
+    'hum': '%',
+    'pre': 'hPa',
+    'default': 'µg/m³',
+  };
+
+  // Build Table rows
+  final List<TableRow> rows = readingsMap.entries.map((entry) {
+    final key = entry.key.toLowerCase();
+    final rawValue = entry.value;
+
+    String valueStr;
+    if (rawValue is num) {
+      valueStr = rawValue.toStringAsFixed(2);
+    } else {
+      valueStr = rawValue.toString();
+    }
+
+    final unit = unitsMap[key] ?? unitsMap['default']!;
+
+    return TableRow(children: [
+      // Parameter name
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0.5),
+        child: Text(
+          entry.key.toUpperCase(),
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+      ),
+      // Value (fixed width)
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0.5),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: 70, // ✅ fixed width for numbers
+            child: Text(
+              valueStr,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.teal,
+              ),
+            ),
+          ),
+        ),
+      ),
+      // Unit (smaller font)
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6.0),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    ]);
+  }).toList();
+
   return Card(
     margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -156,20 +228,14 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
             style: const TextStyle(color: Colors.grey),
           ),
           const Divider(),
-          ...readingsMap.entries.map(
-            (entry) => Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(entry.key.toUpperCase()),
-                Text(
-                  entry.value.toString(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-              ],
-            ),
+          Table(
+            columnWidths: const {
+              0: FlexColumnWidth(0.5), // parameter
+              1: IntrinsicColumnWidth(), // value fixed
+              2: IntrinsicColumnWidth(), // unit
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: rows,
           ),
         ],
       ),

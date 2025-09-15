@@ -13,14 +13,14 @@ class QuestionnairePage extends StatefulWidget {
 }
 
 class _QuestionnairePageState extends State<QuestionnairePage> {
-  String? ageGroup;
-  String? gender;
-  String? respiratoryIssue;
-  String? smokingHistory;
-  String? environment;
-  String? occupation;
+  String? AgeGroup;
+  String? Gender;
+  String? RespiratoryIssue;
+  String? SmokingHistory;
+  String? Environment;
+  String? Occupation;
 
-  List<String> symptoms = [];
+  List<String> Symptoms = [];
   List<String> symptomOptions = [
     'Frequent Cough',
     'Shortness of Breath',
@@ -60,13 +60,13 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
     if (doc.docs.isNotEmpty) {
       final data = doc.docs.first.data();
       setState(() {
-        ageGroup = data['ageGroup'];
-        gender = data['gender'];
-        respiratoryIssue = data['respiratoryIssue'];
-        smokingHistory = data['smokingHistory'];
-        environment = data['environment'];
-        occupation = data['occupation'];
-        symptoms = List<String>.from(data['symptoms'] ?? []);
+        AgeGroup = data['ageGroup'];
+        Gender = data['gender'];
+        RespiratoryIssue = data['respiratoryIssue'];
+        SmokingHistory = data['smokingHistory'];
+        Environment = data['environment'];
+        Occupation = data['occupation'];
+        Symptoms = List<String>.from(data['symptoms'] ?? []);
       });
     }
   }
@@ -75,29 +75,29 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
     int score = 0;
 
     // Age group
-    if (ageGroup == 'Above 60') score += 20;
-    else if (ageGroup == '46-60') score += 15;
-    else if (ageGroup == '36-45') score += 10;
-    else if (ageGroup == '26-35') score += 5;
+    if (AgeGroup == 'Above 60') score += 20;
+    else if (AgeGroup == '46-60') score += 15;
+    else if (AgeGroup == '36-45') score += 10;
+    else if (AgeGroup == '26-35') score += 5;
 
     // Respiratory issues
-    if (respiratoryIssue == 'Yes') score += 20;
+    if (RespiratoryIssue == 'Yes') score += 20;
 
     // Smoking history
-    if (smokingHistory == 'Regular Smoker') score += 20;
-    else if (smokingHistory == 'Occasional Smoker') score += 10;
+    if (SmokingHistory == 'Regular Smoker') score += 20;
+    else if (SmokingHistory == 'Occasional Smoker') score += 10;
 
     // Environment
-    if (environment == 'Industrial Area' || environment == 'Near Highways') score += 15;
-    else if (environment == 'Urban') score += 10;
+    if (Environment == 'Industrial Area' || Environment == 'Near Highways') score += 15;
+    else if (Environment == 'Urban') score += 10;
 
     // Symptoms
-    score += symptoms.length * 5;
+    score += Symptoms.length * 5;
 
     // Occupation
-    if (occupation == 'Factory Worker' || occupation == 'Construction Worker') score += 15;
-    else if (occupation == 'Farmer') score += 10;
-    else if (occupation == 'Healthcare Worker') score += 5;
+    if (Occupation == 'Factory Worker' || Occupation == 'Construction Worker') score += 15;
+    else if (Occupation == 'Farmer') score += 10;
+    else if (Occupation == 'Healthcare Worker') score += 5;
 
     return score.clamp(0, 100);
   }
@@ -116,12 +116,12 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
 
 
   Future<void> submit() async {
-    if (ageGroup == null ||
-        gender == null ||
-        respiratoryIssue == null ||
-        smokingHistory == null ||
-        environment == null ||
-        occupation == null ) {
+    if (AgeGroup == null ||
+        Gender == null ||
+        RespiratoryIssue == null ||
+        SmokingHistory == null ||
+        Environment == null ||
+        Occupation == null ) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❗ Please answer all questions.')),
       );
@@ -140,13 +140,13 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
 
       final dataToStore = {
         'phone': widget.phone,
-        'ageGroup': ageGroup,
-        'gender': gender,
-        'respiratoryIssue': respiratoryIssue,
-        'smokingHistory': smokingHistory,
-        'environment': environment,
-        'occupation': occupation,
-        'symptoms': symptoms,
+        'ageGroup': AgeGroup,
+        'gender': Gender,
+        'respiratoryIssue': RespiratoryIssue,
+        'smokingHistory': SmokingHistory,
+        'environment': Environment,
+        'occupation': Occupation,
+        'symptoms': Symptoms,
         'healthScore': score,
         'riskLevel': risk['level'],
         'riskColor': risk['color'],
@@ -212,13 +212,13 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
       ...symptomOptions.map((symptom) {
         return CheckboxListTile(
           title: Text(symptom),
-          value: symptoms.contains(symptom),
+          value: Symptoms.contains(symptom),
           onChanged: (bool? value) {
             setState(() {
               if (value == true) {
-                symptoms.add(symptom);
+                Symptoms.add(symptom);
               } else {
-                symptoms.remove(symptom);
+                Symptoms.remove(symptom);
               }
             });
           },
@@ -248,40 +248,40 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
       children: [
         buildDropdown(
           title: '1. What is your age group?',
-          value: ageGroup,
+          value: AgeGroup,
           options: ageOptions,
-          onChanged: (val) => setState(() => ageGroup = val),
+          onChanged: (val) => setState(() => AgeGroup = val),
         ),
         buildDropdown(
           title: '2. What is your gender?',
-          value: gender,
+          value: Gender,
           options: genderOptions,
-          onChanged: (val) => setState(() => gender = val),
+          onChanged: (val) => setState(() => Gender = val),
         ),
         buildDropdown(
           title: '3. Do you have any respiratory issues?',
-          value: respiratoryIssue,
+          value: RespiratoryIssue,
           options: yesNo,
-          onChanged: (val) => setState(() => respiratoryIssue = val),
+          onChanged: (val) => setState(() => RespiratoryIssue = val),
         ),
         buildDropdown(
           title: '4. Smoking History',
-          value: smokingHistory,
+          value: SmokingHistory,
           options: ['Non-Smoker', 'Occasional Smoker', 'Regular Smoker'],
-          onChanged: (val) => setState(() => smokingHistory = val),
+          onChanged: (val) => setState(() => SmokingHistory = val),
         ),
         buildDropdown(
           title: '5. Living Environment',
-          value: environment,
+          value: Environment,
           options: environmentOptions,
-          onChanged: (val) => setState(() => environment = val),
+          onChanged: (val) => setState(() => Environment = val),
         ),
         buildCheckboxList(),
         buildDropdown(
           title: '7. Occupational Exposure',
-          value: occupation,
+          value: Occupation,
           options: occupationOptions,
-          onChanged: (val) => setState(() => occupation = val),
+          onChanged: (val) => setState(() => Occupation = val),
         ),
         const SizedBox(height: 20),
         SizedBox(

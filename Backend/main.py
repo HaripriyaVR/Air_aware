@@ -435,33 +435,58 @@ def user_aqi():
     except (TypeError, ValueError):
         return jsonify({"error": "Invalid or missing coordinates"}), 400
 
-    nearby_sensors = []
+    sensor_distances = []  # collect all sensors + distances
     for sid in SENSOR_IDS:
         sensor_lat = SENSOR_LOCATIONS[sid]["lat"]
         sensor_lon = SENSOR_LOCATIONS[sid]["lon"]
         distance = haversine(user_lat, user_lon, sensor_lat, sensor_lon)
-        print(f"[DISTANCE] Sensor: {sid}, Distance: {distance:.3f} km")
+        data = latest_from_dynamo(sid)
+        print(f"[DISTANCE] Sensor: {sid}, Distance: {distance:.3f} km, "
+              f"AQI: {data['aqi'] if data else 'No data'}")
 
-        if distance <= 2:
-            data = latest_from_dynamo(sid)
-            print(f"[SENSOR DATA] {sid} AQI: {data['aqi'] if data else 'No data'}")
-            if data and data["aqi"] is not None:
-                nearby_sensors.append(data)
+        if data and data.get("aqi") is not None:
+            sensor_distances.append({
+                "sensor_id": sid,
+                "lat": sensor_lat,
+                "lon": sensor_lon,
+                "aqi": data["aqi"],
+                "distance": distance
+            })
 
-    if not nearby_sensors:
-        print("[INFO] No sensors found within 2 km.")
-        return jsonify({"error": "No nearby sensors within 2 km"}), 404
+    if not sensor_distances:
+        print("[INFO] No sensors with AQI data at all.")
+        return jsonify({"error": "No sensor data available"}), 404
 
-    aqi = idw_aqi(user_lat, user_lon, nearby_sensors)
+    # Sort by distance
+    sensor_distances.sort(key=lambda x: x["distance"])
+
+    # Option A: use top 3 nearest sensors
+    nearest_sensors = sensor_distances[:3]
+
+    # Option B: or use all sensors but weighted by distance (IDW handles that)
+    # nearest_sensors = sensor_distances
+
+    aqi = idw_aqi(user_lat, user_lon, nearest_sensors)
     status = get_aqi_status(aqi) if aqi is not None else "Unknown"
-    print(f"[RESULT] Interpolated AQI: {aqi}, Status: {status}")
+
+    # 🔹 Get nearest sensor info
+    nearest_sensor = min(sensor_distances, key=lambda x: x["distance"])
+
+    print(f"[RESULT] Interpolated AQI: {aqi}, Status: {status}, "
+          f"Nearest Sensor: {nearest_sensor['sensor_id']} ({nearest_sensor['distance']:.3f} km)")
 
     return jsonify({
         "user_aqi": aqi,
         "status": status,
-        "sensor_count": len(nearby_sensors),
-        "sources": [s["sensor_id"] for s in nearby_sensors]
+        "sensor_count": len(nearest_sensors),
+        "closest_sensor": {
+            "sensor_id": nearest_sensor["sensor_id"],
+            "distance_km": round(nearest_sensor["distance"], 3)
+        },
+        "sources": [s["sensor_id"] for s in nearest_sensors]
     })
+
+
 
 if __name__== "__main__":
     # Register API blueprint with /api prefix

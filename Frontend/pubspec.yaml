@@ -51,6 +51,7 @@ dependencies:
   percent_indicator: ^4.2.3
   open_filex: ^4.4.0
   universal_io: any
+  geocoding: ^2.1.0
   #syncfusion_flutter_pdfviewer: ^30.1.40
 
 

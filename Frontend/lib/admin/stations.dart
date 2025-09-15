@@ -82,109 +82,146 @@ class _LiveGasPageState extends State<LiveGasPage> {
   }
 
   Widget buildSensorCard(Map<String, dynamic> sensor) {
-    final readings = sensor['readings'];
+  final readings = sensor['readings'];
 
-    if (readings == null || readings is! Map<String, dynamic>) {
-      return Card(
-        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        elevation: 6,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text(
-            "⚠️ No readings available",
-            style: TextStyle(fontSize: 16, color: Colors.redAccent),
-          ),
-        ),
-      );
-    }
-
-    final Map<String, dynamic> readingsMap = readings;
-
-    // ✅ Extract AQI, Status, Date, Time
-    final String aqi = sensor['aqi']?.toString() ?? "N/A";
-    final String status = sensor['status']?.toString() ?? "N/A";
-    final String dateStr = sensor['date'] ?? '';
-    final String timeStr = sensor['time'] ?? '';
-
-    // ✅ Format Date
-    String formattedDate = dateStr;
-    try {
-      final parts = dateStr.split(':');
-      if (parts.length == 3) {
-        final parsedDate = DateTime(
-          int.parse(parts[2]),
-          int.parse(parts[1]),
-          int.parse(parts[0]),
-        );
-        formattedDate = DateFormat('dd MMM yyyy').format(parsedDate);
-      }
-    } catch (e) {
-      debugPrint("Date parsing error: $e");
-    }
-
-    final String sensorId = sensor['sensor_id'] ?? 'Unknown';
-    final String displaySensor = SensorNameMapper.displayName(sensorId);
-
-    // ✅ Card UI
+  // ✅ Handle missing/invalid readings
+  if (readings == null || readings is! Map<String, dynamic>) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Station title
-            Text(
-              displaySensor,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-
-            // AQI and Status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("AQI: $aqi", style: const TextStyle(fontSize: 16)),
-                Text("Status: $status",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: status.toLowerCase() == "good"
-                          ? Colors.green
-                          : Colors.red,
-                      fontWeight: FontWeight.bold,
-                    )),
-              ],
-            ),
-
-            const SizedBox(height: 4),
-            Text("Last Update: $formattedDate $timeStr",
-                style: const TextStyle(color: Colors.grey)),
-            const Divider(),
-
-            // Readings
-            ...readingsMap.entries.map(
-              (entry) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(entry.key.toUpperCase()),
-                  Text(
-                    entry.value.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          "⚠️ No readings available",
+          style: TextStyle(fontSize: 16, color: Colors.redAccent),
         ),
       ),
     );
   }
+
+  final Map<String, dynamic> readingsMap = readings;
+
+  // ✅ Extract AQI, Status, Date, Time
+  final String aqi = sensor['aqi']?.toString() ?? "N/A";
+  final String status = sensor['status']?.toString() ?? "N/A";
+  final String dateStr = sensor['date'] ?? '';
+  final String timeStr = sensor['time'] ?? '';
+
+  // ✅ Format Date
+  String formattedDate = dateStr;
+  try {
+    final parts = dateStr.split(':');
+    if (parts.length == 3) {
+      final parsedDate = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+      formattedDate = DateFormat('dd MMM yyyy').format(parsedDate);
+    }
+  } catch (e) {
+    debugPrint("Date parsing error: $e");
+  }
+
+  final String sensorId = sensor['sensor_id'] ?? 'Unknown';
+  final String displaySensor = SensorNameMapper.displayName(sensorId);
+
+  // ✅ Units map for each parameter
+  final Map<String, String> unitsMap = {
+    'co': 'µg/m³',
+    'co2': 'µg/m³',
+    'so2': 'µg/m³',
+    'no2': 'µg/m³',
+    'o3': 'µg/m³',
+    'pm2_5': 'µg/m³',
+    'pm10': 'µg/m³',
+    'temperature': '°C',
+    'temp': '°C',
+    'hum': '%',
+    'pre': 'hPa',
+    'default': 'µg/m³',
+  };
+
+  // ✅ Card UI
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    elevation: 6,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Station title
+          Text(
+            displaySensor,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+
+          // AQI and Status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("AQI: $aqi", style: const TextStyle(fontSize: 16)),
+              Text(
+                "Status: $status",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: status.toLowerCase() == "good"
+                      ? Colors.green
+                      : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 4),
+          Text(
+            "Last Update: $formattedDate $timeStr",
+            style: const TextStyle(color: Colors.grey),
+          ),
+          const Divider(),
+
+          // ✅ Readings with units
+          ...readingsMap.entries.map((entry) {
+            final key = entry.key.toLowerCase();
+            final rawValue = entry.value;
+
+            // Format numbers if possible
+            String valueStr;
+            if (rawValue is num) {
+              valueStr = rawValue.toStringAsFixed(2); // 2 decimals
+            } else {
+              valueStr = rawValue.toString();
+            }
+
+            // Add unit
+            final unit = unitsMap[key] ?? unitsMap['default'];
+            final displayValue = "$valueStr $unit";
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(entry.key.toUpperCase()),
+                Text(
+                  displayValue,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                ),
+              ],
+            );
+          }),
+        ],
+      ),
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {

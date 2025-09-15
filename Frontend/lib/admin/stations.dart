@@ -142,6 +142,63 @@ class _LiveGasPageState extends State<LiveGasPage> {
     'pre': 'hPa',
     'default': 'µg/m³',
   };
+  
+
+  // Build Table rows
+  /*final List<TableRow> rows = readingsMap.entries.map((entry) {
+    final key = entry.key.toLowerCase();
+    final rawValue = entry.value;
+
+    String valueStr;
+    if (rawValue is num) {
+      valueStr = rawValue.toStringAsFixed(1);
+    } else {
+      valueStr = rawValue.toString();
+    }
+
+    final unit = unitsMap[key] ?? unitsMap['default']!;
+
+    return TableRow(children: [
+      // Parameter name
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0.5),
+        child: Text(
+          entry.key.toUpperCase(),
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+      ),
+      // Value (fixed width)
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0.5),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: 70, // ✅ fixed width for numbers
+            child: Text(
+              valueStr,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.teal,
+              ),
+            ),
+          ),
+        ),
+      ),
+      // Unit (smaller font)
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6.0),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    ]);
+  }).toList();*/
 
   // ✅ Card UI
   return Card(
@@ -193,7 +250,7 @@ class _LiveGasPageState extends State<LiveGasPage> {
             // Format numbers if possible
             String valueStr;
             if (rawValue is num) {
-              valueStr = rawValue.toStringAsFixed(2); // 2 decimals
+              valueStr = rawValue.toStringAsFixed(1); // 2 decimals
             } else {
               valueStr = rawValue.toString();
             }

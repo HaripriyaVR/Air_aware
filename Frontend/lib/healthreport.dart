@@ -949,7 +949,7 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const ui.Color.fromARGB(255, 102, 187, 144), const ui.Color.fromARGB(255, 88, 249, 255), const ui.Color.fromARGB(255, 7, 102, 255)],
+          colors: [Colors.green.shade400, Colors.yellow.shade400, Colors.red.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1026,7 +1026,7 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const ui.Color.fromARGB(255, 102, 187, 144), const ui.Color.fromARGB(255, 88, 249, 255), const ui.Color.fromARGB(255, 7, 102, 255)],
+          colors: [Colors.teal.shade400, Colors.orange.shade400, Colors.red.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1111,7 +1111,7 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const ui.Color.fromARGB(255, 102, 187, 144), const ui.Color.fromARGB(255, 88, 249, 255), const ui.Color.fromARGB(255, 7, 102, 255)],
+          colors: [Colors.orange.shade300, Colors.red.shade300],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

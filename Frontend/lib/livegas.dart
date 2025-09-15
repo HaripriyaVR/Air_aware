@@ -161,7 +161,7 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
 
     String valueStr;
     if (rawValue is num) {
-      valueStr = rawValue.toStringAsFixed(2);
+      valueStr = rawValue.toStringAsFixed(1);
     } else {
       valueStr = rawValue.toString();
     }

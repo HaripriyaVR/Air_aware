@@ -13,7 +13,8 @@ import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart';
 import 'admin/login.dart';
-
+import 'bottom_nav.dart';
+import 'background_design.dart';
 // Example usage inside a widget
 
 
@@ -258,53 +259,91 @@ Future<void> _refresh() async {
         ],
       ),
 
+      // body: RefreshIndicator(
+      //   onRefresh: _refresh,
+      //   child: FutureBuilder<Map<String, dynamic>?>(
+      //     future: _aqiFuture,
+      //     builder: (context, snapshot) {
+      //       if (snapshot.connectionState != ConnectionState.done) {
+      //         return const Center(child: CircularProgressIndicator());
+      //       }
+      //       if (!snapshot.hasData || snapshot.data == null) {
+      //         debugPrint('[AQI] Using dummy data');
+      //         return _buildDashboardUI(dummyData);
+      //       }
+      //       return _buildDashboardUI(snapshot.data!);
+      //     },
+      //   ),
+      // ),
+
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: FutureBuilder<Map<String, dynamic>?>(
-          future: _aqiFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || snapshot.data == null) {
-              debugPrint('[AQI] Using dummy data');
-              return _buildDashboardUI(dummyData);
-            }
-            return _buildDashboardUI(snapshot.data!);
-          },
+        child: Stack(
+          children: [
+            const BackgroundDesign(), // ✅ background separated
+
+            // Page content
+            Center(
+              child: FutureBuilder<Map<String, dynamic>?>(
+                future: _aqiFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data == null) {
+                    debugPrint('[AQI] Using dummy data');
+                    return _buildDashboardUI(dummyData);
+                  }
+                  return _buildDashboardUI(snapshot.data!);
+                },
+              ),
+            ),
+          ],
         ),
       ),
 
+
       // ✅ bottom nav bar is inside Scaffold
-      bottomNavigationBar: BottomNavigationBar(
+      // bottomNavigationBar: BottomNavigationBar(
+      //   currentIndex: _selectedIndex,
+      //   selectedItemColor: Colors.teal,
+      //   unselectedItemColor: Colors.grey,
+      //   type: BottomNavigationBarType.fixed,
+      //   items: [
+      //     const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+      //     const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
+      //     const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
+      //     if (isLoggedIn)
+      //       const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+      //     const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+      //   ],
+      //   onTap: (index) {
+      //     if (index == 1) {
+      //       Navigator.pushReplacement(context, MaterialPageRoute(
+      //         builder: (_) => SensorMapPage(phone: widget.phone),
+      //       ));
+      //     } else if (index == 2) {
+      //       Navigator.pushReplacement(context, MaterialPageRoute(
+      //         builder: (_) => LiveGasPage(phone: widget.phone),
+      //       ));
+      //     } else if (isLoggedIn && index == 3) {
+      //       Navigator.push(context, MaterialPageRoute(
+      //         builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
+      //       ));
+      //     } else if ((!isLoggedIn && index == 3) || index == 4) {
+      //       _showMenuOptions(context);
+      //     }
+      //     setState(() {
+      //       _selectedIndex = index;
+      //     });
+      //   },
+      // ),
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-          if (isLoggedIn)
-            const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (_) => SensorMapPage(phone: widget.phone),
-            ));
-          } else if (index == 2) {
-            Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (_) => LiveGasPage(phone: widget.phone),
-            ));
-          } else if (isLoggedIn && index == 3) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
-            ));
-          } else if ((!isLoggedIn && index == 3) || index == 4) {
-            _showMenuOptions(context);
-          }
+        isLoggedIn: isLoggedIn,
+        phone: widget.phone,
+        showMenu: _showMenuOptions,
+        onIndexChanged: (index) {
           setState(() {
             _selectedIndex = index;
           });
@@ -327,83 +366,110 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
 
   return SingleChildScrollView(
     padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text("Your Location",
-            style: TextStyle(color: Colors.grey[700], fontSize: 14)),
-        Text(displaySensor,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-
-        // AQI Row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.circle, size: 12, color: Colors.red),
-                const SizedBox(width: 6),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Live AQI", style: TextStyle(fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _aqiColor(aqi).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$aqi',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: _aqiColor(aqi),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text("Air Quality is", style: TextStyle(fontSize: 16)),
-                const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _aqiColor(aqi).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        // ------------------home page content design start here-------------------------------
+        children: [
+          const Text(
+                    "Your Location :",
+                    style: TextStyle(color: Colors.black54,fontSize: 16, fontFamily:'poppins'),
                   ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
+                Text(
+                    displaySensor,
+                    style: const TextStyle( fontSize: 20, fontFamily:'poppins',fontWeight: FontWeight.bold)
+                    ),
+          const SizedBox(height: 20),
+           // AQI Status + Value
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text("Air Quality is", style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 142,
+                    height: 52,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12, 
+                      vertical: 6
+                    ),
+                    decoration: BoxDecoration(
                       color: _aqiColor(aqi),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        // color: _aqiColor(aqi),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: Colors.red, size: 10),
+                      SizedBox(width: 4),
+                      Text("Live AQI"),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '$aqi',
+                    style: TextStyle(
+                      fontSize: 68,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  // Text("PM2.5: 19µg/m³"),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  //   decoration: BoxDecoration(
+                  //     color: _aqiColor(aqi).withOpacity(0.1),
+                  //     borderRadius: BorderRadius.circular(12),
+                  //   ),
+                  //   child: Text(
+                  //     '$aqi',
+                  //     style: TextStyle(
+                  //       fontSize: 36,
+                  //       fontWeight: FontWeight.bold,
+                  //       color: _aqiColor(aqi),
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+            ],
+          ),
 
-        const SizedBox(height: 24),
-        _buildAqiGradientBar(context, aqi),
-        const SizedBox(height: 24),
-        _buildWeatherCard(temp, hum, pre),
-        const SizedBox(height: 20),
-        Text("Last Update:  $time",
-            style: const TextStyle(color: Colors.grey)),
-      ],
-    ),
+          const SizedBox(height: 10),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     Text("PM2.5: $pm25 µg/m³", style: const TextStyle(fontSize: 14)),
+          //     const SizedBox(width: 20),
+          //     Text("PM10: $pm10 µg/m³", style: const TextStyle(fontSize: 14)),
+          //   ],
+          // ),
+
+          const SizedBox(height: 24),
+          _buildAqiGradientBar(context, aqi),
+          const SizedBox(height: 24),
+          _buildWeatherCard(temp, hum, pre),
+          const SizedBox(height: 20),
+          Text("Last Update:  $time", style: const TextStyle(color: Colors.grey)),
+        ],
+      ),
   );
 }
 

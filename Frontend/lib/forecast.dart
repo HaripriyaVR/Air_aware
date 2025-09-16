@@ -9,6 +9,8 @@ import 'home.dart';
 import 'map.dart';
 import 'livegas.dart';
 import 'profile.dart';
+import 'bottom_nav.dart';
+import 'config.dart';
 import 'utils/sensor_name_mapper.dart'; // ✅ import your mapper
 
 
@@ -177,156 +179,409 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
         actions: [
           // ✅ Sensor selector
          
-DropdownButton<String>(
-  value: selectedSensor,
-  underline: const SizedBox(),
-  items: sortedKeys.map((sensorKey) {
-    return DropdownMenuItem<String>(
-      value: sensorKey,
-      child: Text(SensorNameMapper.displayName(sensorKey)),
-    );
-  }).toList(),
-  onChanged: (val) {
-    if (val != null) {
-      setState(() {
-        selectedSensor = val;
-      });
-    }
-  },
-),
-
-
+          DropdownButton<String>(
+            value: selectedSensor,
+            underline: const SizedBox(),
+            items: sortedKeys.map((sensorKey) {
+              return DropdownMenuItem<String>(
+                value: sensorKey,
+                child: Text(SensorNameMapper.displayName(sensorKey)),
+              );
+            }).toList(),
+            onChanged: (val) {
+              if (val != null) {
+                setState(() {
+                  selectedSensor = val;
+                });
+              }
+            },
+          ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            // Pollutant Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(pollutantLabels.length, (i) {
-                  final selected = i == selectedIndex;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    child: ChoiceChip(
-                      label: Text(pollutantLabels[i]),
-                      selected: selected,
-                      onSelected: (_) => setState(() => selectedIndex = i),
-                      selectedColor: Colors.deepPurple.shade100,
-                      backgroundColor: Colors.grey.shade50,
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 12),
+      // 
+      
+      // body: SingleChildScrollView(
+      //   padding: const EdgeInsets.all(16),
+      //   child: Column(
+      //     crossAxisAlignment: CrossAxisAlignment.start,
+      //     children: [
+      //       // Title
+      //       Text(
+      //         "Air Quality Analysis",
+      //         style: TextStyle(
+      //           fontSize: 20,
+      //           fontWeight: FontWeight.bold,
+      //           color: Colors.blue.shade800,
+      //         ),
+      //       ),
+      //       const SizedBox(height: 16),
 
-            // Chart
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.3,
-              child: LineChart(
-                LineChartData(
-                  minX: 0,
-                  maxX: (values.length - 1).toDouble(),
-                  minY: minVal,
-                  maxY: maxVal,
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: interval,
-                  ),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 48,
-                        interval: interval,
-                        getTitlesWidget: (value, meta) =>
-                            Text(value.toStringAsFixed(0), style: const TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 1,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          if (idx < 0 || idx >= labels.length) return const SizedBox.shrink();
-                          return Text(labels[idx], style: const TextStyle(fontSize: 10));
-                        },
-                      ),
-                    ),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: values.asMap().entries.map(
-                        (e) => FlSpot(e.key.toDouble(), e.value),
-                      ).toList(),
-                      isCurved: true,
-                      color: Colors.blue,
-                      barWidth: 3,
-                      dotData: FlDotData(show: true),
-                      belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.2)),
-                    ),
-                  ],
+      //       // Pollutant Chips
+      //       SingleChildScrollView(
+      //         scrollDirection: Axis.horizontal,
+      //         child: Row(
+      //           children: List.generate(pollutantLabels.length, (i) {
+      //             final selected = i == selectedIndex;
+      //             return Padding(
+      //               padding: const EdgeInsets.symmetric(horizontal: 6.0),
+      //               child: ChoiceChip(
+      //                 label: Text(
+      //                   pollutantLabels[i],
+      //                   style: TextStyle(
+      //                     fontWeight: FontWeight.w500,
+      //                     color: selected ? Colors.white : Colors.blueGrey.shade700,
+      //                   ),
+      //                 ),
+      //                 selected: selected,
+      //                 onSelected: (_) => setState(() => selectedIndex = i),
+      //                 selectedColor: Colors.green.shade600,
+      //                 backgroundColor: Colors.blue.shade50,
+      //                 shape: RoundedRectangleBorder(
+      //                   borderRadius: BorderRadius.circular(20),
+      //                 ),
+      //               ),
+      //             );
+      //           }),
+      //         ),
+      //       ),
+      //       const SizedBox(height: 16),
+
+      //       // Chart Card
+      //       Card(
+      //         elevation: 3,
+      //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      //         child: Padding(
+      //           padding: const EdgeInsets.all(12.0),
+      //           child: SizedBox(
+      //             height: MediaQuery.of(context).size.height * 0.3,
+      //             child: LineChart(
+      //               LineChartData(
+      //                 minX: 0,
+      //                 maxX: (values.length - 1).toDouble(),
+      //                 minY: minVal,
+      //                 maxY: maxVal,
+      //                 gridData: FlGridData(
+      //                   show: true,
+      //                   drawVerticalLine: false,
+      //                   horizontalInterval: interval,
+      //                   getDrawingHorizontalLine: (value) => FlLine(
+      //                     color: Colors.blue.shade100,
+      //                     strokeWidth: 1,
+      //                   ),
+      //                 ),
+      //                 titlesData: FlTitlesData(
+      //                   leftTitles: AxisTitles(
+      //                     sideTitles: SideTitles(
+      //                       showTitles: true,
+      //                       reservedSize: 48,
+      //                       interval: interval,
+      //                       getTitlesWidget: (value, meta) => Text(
+      //                         value.toStringAsFixed(0),
+      //                         style: const TextStyle(fontSize: 11, color: Colors.black87),
+      //                       ),
+      //                     ),
+      //                   ),
+      //                   bottomTitles: AxisTitles(
+      //                     sideTitles: SideTitles(
+      //                       showTitles: true,
+      //                       interval: 1,
+      //                       getTitlesWidget: (value, meta) {
+      //                         final idx = value.toInt();
+      //                         if (idx < 0 || idx >= labels.length) {
+      //                           return const SizedBox.shrink();
+      //                         }
+      //                         return Text(
+      //                           labels[idx],
+      //                           style: const TextStyle(fontSize: 10, color: Colors.black87),
+      //                         );
+      //                       },
+      //                     ),
+      //                   ),
+      //                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      //                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      //                 ),
+      //                 lineBarsData: [
+      //                   LineChartBarData(
+      //                     spots: values
+      //                         .asMap()
+      //                         .entries
+      //                         .map((e) => FlSpot(e.key.toDouble(), e.value))
+      //                         .toList(),
+      //                     isCurved: true,
+      //                     color: Colors.blue.shade700,
+      //                     barWidth: 3,
+      //                     dotData: FlDotData(show: true),
+      //                     belowBarData: BarAreaData(
+      //                       show: true,
+      //                       gradient: LinearGradient(
+      //                         colors: [
+      //                           Colors.blue.withOpacity(0.3),
+      //                           Colors.green.withOpacity(0.2),
+      //                         ],
+      //                         begin: Alignment.topCenter,
+      //                         end: Alignment.bottomCenter,
+      //                       ),
+      //                     ),
+      //                   ),
+      //                 ],
+      //               ),
+      //             ),
+      //           ),
+      //         ),
+      //       ),
+      //       const SizedBox(height: 20),
+
+      //       // Data Table Card
+      //       // Data Table Full Width
+      //       Card(
+      //         elevation: 3,
+      //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      //         child: Padding(
+      //           padding: const EdgeInsets.all(8.0),
+      //           child: SingleChildScrollView(
+      //             scrollDirection: Axis.horizontal, // in case content overflows
+      //             child: SizedBox(
+      //               width: MediaQuery.of(context).size.width - 32, // full screen minus padding
+      //               child: DataTable(
+      //                 headingRowColor: MaterialStateProperty.all(Colors.green.shade50),
+      //                 columnSpacing: 40, // adjust spacing between columns
+      //                 columns: const [
+      //                   DataColumn(
+      //                     label: Text(
+      //                       "Date",
+      //                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+      //                     ),
+      //                   ),
+      //                   DataColumn(
+      //                     label: Text(
+      //                       "Value (µg/m³)",
+      //                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+      //                     ),
+      //                   ),
+      //                 ],
+      //                 rows: List.generate(labels.length, (i) {
+      //                   return DataRow(
+      //                     cells: [
+      //                       DataCell(Text(labels[i], style: const TextStyle(fontSize: 13))),
+      //                       DataCell(Text(values[i].toStringAsFixed(2),
+      //                           style: const TextStyle(fontSize: 13))),
+      //                     ],
+      //                   );
+      //                 }),
+      //               ),
+      //             ),
+      //           ),
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      // ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: GestureDetector(
+          onHorizontalDragEnd: (details) {
+            if (details.primaryVelocity != null) {
+              if (details.primaryVelocity! < 0) {
+                // Swipe Left → Next pollutant
+                setState(() {
+                  if (selectedIndex < pollutantLabels.length - 1) {
+                    selectedIndex++;
+                  }
+                });
+              } else if (details.primaryVelocity! > 0) {
+                // Swipe Right → Previous pollutant
+                setState(() {
+                  if (selectedIndex > 0) {
+                    selectedIndex--;
+                  }
+                });
+              }
+            }
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              Text(
+                "Air Quality Analysis",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Data Table
-            DataTable(
-              headingRowColor: MaterialStateProperty.all(Colors.blue.shade50),
-              columns: const [
-                DataColumn(label: Text("Date", style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text("Value (µg/m³)", style: TextStyle(fontWeight: FontWeight.bold))),
-              ],
-              rows: List.generate(labels.length, (i) {
-                return DataRow(cells: [
-                  DataCell(Text(labels[i])),
-                  DataCell(Text(values[i].toStringAsFixed(2))),
-                ]);
-              }),
-            ),
-          ],
+              // Pollutant Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(pollutantLabels.length, (i) {
+                    final selected = i == selectedIndex;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                      child: ChoiceChip(
+                        label: Text(
+                          pollutantLabels[i],
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: selected ? Colors.white : Colors.blueGrey.shade700,
+                          ),
+                        ),
+                        selected: selected,
+                        onSelected: (_) => setState(() => selectedIndex = i),
+                        selectedColor: Colors.green.shade600,
+                        backgroundColor: Colors.blue.shade50,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Chart Card
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: LineChart(
+                      LineChartData(
+                        minX: 0,
+                        maxX: (values.length - 1).toDouble(),
+                        minY: minVal,
+                        maxY: maxVal,
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: interval,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: Colors.blue.shade100,
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 48,
+                              interval: interval,
+                              getTitlesWidget: (value, meta) => Text(
+                                value.toStringAsFixed(0),
+                                style: const TextStyle(fontSize: 11, color: Colors.black87),
+                              ),
+                            ),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 1,
+                              getTitlesWidget: (value, meta) {
+                                final idx = value.toInt();
+                                if (idx < 0 || idx >= labels.length) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Text(
+                                  labels[idx],
+                                  style: const TextStyle(fontSize: 10, color: Colors.black87),
+                                );
+                              },
+                            ),
+                          ),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: values
+                                .asMap()
+                                .entries
+                                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                .toList(),
+                            isCurved: true,
+                            color: Colors.blue.shade700,
+                            barWidth: 3,
+                            dotData: FlDotData(show: true),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue.withOpacity(0.3),
+                                  Colors.green.withOpacity(0.2),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Data Table Full Width
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width - 32,
+                      child: DataTable(
+                        headingRowColor: MaterialStateProperty.all(Colors.green.shade50),
+                        columnSpacing: 40,
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              "Date",
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Value (µg/m³)",
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                            ),
+                          ),
+                        ],
+                        rows: List.generate(labels.length, (i) {
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(labels[i], style: const TextStyle(fontSize: 13))),
+                              DataCell(Text(values[i].toStringAsFixed(2),
+                                  style: const TextStyle(fontSize: 13))),
+                            ],
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
 
-      // ✅ BottomNavigationBar (unchanged)
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-          if (_isLoggedIn)
-            const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-        ],
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => AQIDashboardPage(phone: widget.phone ?? "")));
-          } else if (index == 1) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => SensorMapPage(phone: widget.phone ?? "")));
-          } else if (index == 2) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => LiveGasPage(phone: widget.phone ?? "")));
-          } else if (_isLoggedIn && index == 3) {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => ProfilePage(phone: widget.phone ?? "Unknown")));
-          } else if ((!_isLoggedIn && index == 3) || index == 4) {
-            _showMenuOptions(context);
-          }
 
+      // // ✅ BottomNavigationBar (unchanged)
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        isLoggedIn: _isLoggedIn,
+        phone: widget.phone,
+        showMenu: _showMenuOptions,
+        onIndexChanged: (index) {
           setState(() {
             _selectedIndex = index;
           });

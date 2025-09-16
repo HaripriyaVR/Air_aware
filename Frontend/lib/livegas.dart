@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -12,6 +11,8 @@ import 'package:intl/intl.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart';
+import 'bottom_nav.dart';
+import 'background_design.dart';
 
 class LiveGasPage extends StatefulWidget {
   final String? phone;
@@ -255,97 +256,110 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
         selectedSensorId != null ? liveData[selectedSensorId] : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Devices")),
-      body: Column(
+      body: Stack(
         children: [
-          // ✅ Station buttons
+          const BackgroundDesign(),
           Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: stationMap.keys.map((station) {
-                return SizedBox(
-                  width: MediaQuery.of(context).size.width / 2.3,
-                  height: 60,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: selectedStation == station
-                          ? Colors.teal
-                          : Colors.blueGrey.shade100,
-                      foregroundColor: selectedStation == station
-                          ? Colors.white
-                          : Colors.black,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15)),
-                      elevation: 4,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        selectedStation = station;
-                      });
-                    },
-                    child: Text(
-                      station,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
+            padding: const EdgeInsets.only(top: 80),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const Text(
+                    "Station Data",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
                     ),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: stationMap.keys.map((station) {
+                        final isSelected = selectedStation == station;
+                        return SizedBox(
+                          width: MediaQuery.of(context).size.width / 2.2,
+                          height: 65,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  isSelected ? Colors.green.shade600 : Colors.blue.shade50,
+                              foregroundColor:
+                                  isSelected ? Colors.white : Colors.blueGrey.shade800,
+                              shadowColor: Colors.blue.shade200,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: isSelected ? 6 : 2,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                selectedStation = station;
+                              });
+                            },
+                            child: Text(
+                              station,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : Colors.blueGrey.shade900,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  selectedStation == null
+                      ? const Center(
+                          child: Text(
+                            "Select a station to view data",
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
+                        )
+                      : (selectedData != null
+                          ? Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: buildSensorCard(selectedData),
+                            )
+                          : const Center(
+                              child: Text(
+                                "This station is under construction 🚧",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blueGrey),
+                              ),
+                            )),
+                ],
+              ),
             ),
-          ),
-
-          // ✅ Show station data or "under construction"
-          Expanded(
-            child: selectedStation == null
-                ? const Center(
-                    child: Text("Select a station to view data",
-                        style: TextStyle(fontSize: 16)))
-                : (selectedData != null
-                    ? ListView(
-                        padding: const EdgeInsets.all(16),
-                        children: [buildSensorCard(selectedData)],
-                      )
-                    : const Center(
-                        child: Text("This station is under construction 🚧",
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w500)))),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-          if (isLoggedIn)
-            const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-        ],
-        onTap: (index) {
+        isLoggedIn: isLoggedIn,
+        phone: widget.phone,
+        showMenu: _showMenuOptions,
+        onIndexChanged: (index) {
           if (index == 0) {
-            Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (_) => AQIDashboardPage(phone: widget.phone),
-            ));
-          } else if (index == 1) {
-            Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (_) => SensorMapPage(phone: widget.phone),
-            ));
-          } else if (isLoggedIn && index == 3) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
-            ));
-          } else if ((!isLoggedIn && index == 3) || index == 4) {
-            _showMenuOptions(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AQIDashboardPage(phone: widget.phone),
+              ),
+            );
+          } else {
+            setState(() {
+              _selectedIndex = index;
+            });
           }
-          setState(() {
-            _selectedIndex = index;
-          });
         },
       ),
     );

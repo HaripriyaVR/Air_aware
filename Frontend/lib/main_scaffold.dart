@@ -32,20 +32,21 @@ Widget build(BuildContext context) {
   final int menuIndex = isLoggedIn ? 4 : 3;
 
   final List<BottomNavigationBarItem> navItems = [
-    const BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Home'),
-    const BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-    const BottomNavigationBarItem(icon: Icon(Icons.sensors), label: 'Stations'),
-    if (isLoggedIn)
-      const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-    const BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Menu'),
-  ];
+    const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+        const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
+        const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
+        if (isLoggedIn)
+          const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+      ];
 
   return Scaffold(
     body: body,
     bottomNavigationBar: BottomNavigationBar(
+      backgroundColor: Colors.green,
       currentIndex: currentIndex,
-      selectedItemColor: Colors.green,
-      unselectedItemColor: Colors.grey,
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.black,
       type: BottomNavigationBarType.fixed,
       items: navItems,
       onTap: (index) {

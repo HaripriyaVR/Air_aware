@@ -1,3 +1,4 @@
+
 import 'package:aqmapp/home.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -102,22 +103,63 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
-      body: SafeArea(
+      body: Stack(
+        children:[
+           // White background
+          Container(color: Colors.white),
+
+          // Blue circle (top-left)
+          Positioned(
+            top: -80,
+            left: -30,
+            child: Container(
+              width: 377,
+              height: 358,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [Colors.blue.withOpacity(0.4), Colors.white.withOpacity(0)],
+                  radius: 0.6,
+                ),
+              ),
+            ),
+          ),
+
+          // Green circle (top-right)
+          Positioned(
+            top: -20,
+            right: -10,
+            child: Container(
+              width: 377,
+              height: 358,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [Colors.green.withOpacity(0.4), Colors.green.withOpacity(0)],
+                  radius: 0.5,
+                ),
+              ),
+            ),
+          ),
+
+          // Page content
+          Center(
+       
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 200),
               const Text(
                 'Welcome',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 28,fontFamily:'poppins' , fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Air Quality Monitoring &\nAwareness System',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 16,fontFamily:'poppins' ,color: Colors.black54),
               ),
               const SizedBox(height: 30),
 
@@ -172,7 +214,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Proceed Button
               SizedBox(
-                width: 250,
+                width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: checkAndSendOtp,
                   style: ElevatedButton.styleFrom(
@@ -192,6 +235,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+          )
+        ]
       ),
     );
   }

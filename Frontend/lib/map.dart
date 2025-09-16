@@ -11,6 +11,7 @@ import 'profile.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart'; 
+import 'bottom_nav.dart';
 
 class SensorMapPage extends StatefulWidget {
   final String? phone;
@@ -194,37 +195,18 @@ Future<void> _fetchUserAQI(double lat, double lon) async {
                 }).toSet(),
               },
             ),
-      bottomNavigationBar: BottomNavigationBar(
+      // 
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-          if (isLoggedIn)
-            const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-        ],
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => AQIDashboardPage(phone: widget.phone)));
-          } else if (index == 2) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => LiveGasPage(phone: widget.phone)));
-          } else if (isLoggedIn && index == 3) {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown")));
-          } else if ((!isLoggedIn && index == 3) || index == 4) {
-            _showMenuOptions(context);
-          }
+        isLoggedIn: isLoggedIn,
+        phone: widget.phone,
+        showMenu: _showMenuOptions,
+        onIndexChanged: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-      ),
+      ),//bottomNavigationBar
     );
   }
 

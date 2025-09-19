@@ -1,7 +1,7 @@
 import 'package:aqmapp/otpsent.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'background_design.dart'; // Import the new background design widget
+import 'background_design.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -15,13 +15,16 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Add this stub to avoid errors
-  void checkAndSendOtp() {
-    // Implement OTP logic or leave empty for now
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 
   Future<void> registerUser() async {
-    if (_formKey.currentState!.validate()) {
+    // ✅ Use ?.validate() to avoid null crash
+    if (_formKey.currentState?.validate() ?? false) {
       final String name = _nameController.text.trim();
       final String phone = '+91${_phoneController.text.trim()}';
 
@@ -34,7 +37,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
         if (existingUser.docs.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('❗ This number is already registered.')),
+            const SnackBar(
+                content: Text('❗ This number is already registered.')),
           );
           return;
         }
@@ -49,7 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
           const SnackBar(content: Text('✅ Registered successfully!')),
         );
 
-        // 👉 Navigate to questionnaire page
+        // 👉 Navigate to login/OTP page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => LoginScreen()),
@@ -75,67 +79,94 @@ class _SignupScreenState extends State<SignupScreen> {
               children: [
                 Expanded(
                   child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Name field (styled)
-                        TextField(
-                          controller: _nameController,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: 'Enter Name',
-                            labelStyle: const TextStyle(color: Colors.green),
-                            hintText: 'Full Name',
-                            hintStyle: const TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.green),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.green),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.green, width: 2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Phone number field (styled)
-                        TextField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          maxLength: 10,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => checkAndSendOtp(),
-                          decoration: InputDecoration(
-                            counterText: "",
-                            prefixText: '+91 ',
-                            labelText: 'Enter Phone Number',
-                            labelStyle: const TextStyle(color: Colors.green),
-                            hintText: '10-digit mobile number',
-                            hintStyle: const TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.green),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.green),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.green, width: 2),
+                    // ✅ Wrap fields in Form
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Name field
+                          TextFormField(
+                            controller: _nameController,
+                            textInputAction: TextInputAction.next,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter your name';
+                              }
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              labelText: 'Enter Name',
+                              labelStyle:
+                                  const TextStyle(color: Colors.green),
+                              hintText: 'Full Name',
+                              hintStyle:
+                                  const TextStyle(color: Colors.grey),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:
+                                    const BorderSide(color: Colors.green),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:
+                                    const BorderSide(color: Colors.green),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: const BorderSide(
+                                    color: Colors.green, width: 2),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                          const SizedBox(height: 16),
+                          // Phone number field
+                          TextFormField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            maxLength: 10,
+                            textInputAction: TextInputAction.done,
+                            validator: (value) {
+                              if (value == null ||
+                                  value.trim().isEmpty ||
+                                  value.trim().length != 10) {
+                                return 'Enter a valid 10-digit phone number';
+                              }
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              counterText: "",
+                              prefixText: '+91 ',
+                              labelText: 'Enter Phone Number',
+                              labelStyle:
+                                  const TextStyle(color: Colors.green),
+                              hintText: '10-digit mobile number',
+                              hintStyle:
+                                  const TextStyle(color: Colors.grey),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:
+                                    const BorderSide(color: Colors.green),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:
+                                    const BorderSide(color: Colors.green),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: const BorderSide(
+                                    color: Colors.green, width: 2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                // Register button aligned at the bottom
+                // Register button at the bottom
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -161,4 +192,3 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
-

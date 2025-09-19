@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
-import 'map.dart';
-import 'profile.dart';
 import 'forecast.dart';
 import 'package:intl/intl.dart';
 import 'utils/sensor_name_mapper.dart';
@@ -16,7 +14,8 @@ import 'background_design.dart';
 
 class LiveGasPage extends StatefulWidget {
   final String? phone;
-  const LiveGasPage({super.key, this.phone});
+  final String? preselectedSensorId;
+  const LiveGasPage({super.key, this.phone, this.preselectedSensorId});
 
   @override
   State<LiveGasPage> createState() => _LiveGasPageState();
@@ -50,7 +49,22 @@ static const String _endpoint = '/api/realtime';
     _loadLoginState();
     _fetch();
     _timer = Timer.periodic(const Duration(seconds: 10), (_) => _fetch());
+    if (widget.preselectedSensorId != null) {
+    // reverse lookup stationMap
+    final matchingStation = stationMap.entries.firstWhere(
+      (entry) => entry.value == widget.preselectedSensorId,
+      orElse: () => const MapEntry('', ''), // avoid crash
+    );
+
+    if (matchingStation.key.isNotEmpty) {
+      selectedStation = matchingStation.key; // ✅ preselect correct station
+    }
   }
+
+  _timer = Timer.periodic(const Duration(seconds: 10), (_) => _fetch());
+}
+
+  
 
   Future<void> _loadLoginState() async {
     final prefs = await SharedPreferences.getInstance();
@@ -62,30 +76,30 @@ static const String _endpoint = '/api/realtime';
 
 /// ✅ Fetch data for all stations by calling /api/realtime?sensor_id=xxx
 Future<void> _fetch() async {
+  if (selectedStation == null) return; // No station selected, nothing to fetch
+
+  final sensorId = stationMap[selectedStation]!;
+  final url = "$_baseUrl$_endpoint?sensor_id=$sensorId";
+
   try {
-    Map<String, dynamic> newData = {};
+    final res = await http.get(Uri.parse(url));
 
-    for (var entry in stationMap.entries) {
-      final sensorId = entry.value;
-      final url = "$_baseUrl$_endpoint?sensor_id=$sensorId";
+    if (!mounted) return; // Avoid setState if widget is disposed
 
-      final res = await http.get(Uri.parse(url));
-      if (res.statusCode == 200) {
-        final decoded = jsonDecode(res.body);
-        //debugPrint("✅ Data for $sensorId: $decoded"); 
-        newData[sensorId] = decoded['data'];
-      } else {
-        debugPrint("HTTP ${res.statusCode} for $sensorId");
-      }
+    if (res.statusCode == 200) {
+      final decoded = jsonDecode(res.body);
+      setState(() {
+        liveData[sensorId] = decoded['data'];
+      });
+    } else if (res.statusCode != 404) {
+      // Only log non-404 errors
+      debugPrint("HTTP ${res.statusCode} for $sensorId");
     }
-
-    setState(() {
-      liveData = newData;
-    });
   } catch (e) {
     debugPrint("Fetch error: $e");
   }
 }
+
 
 
   @override
@@ -262,81 +276,83 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
           Padding(
             padding: const EdgeInsets.only(top: 80),
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const Text(
-                    "Station Data",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal,
+              child: Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      "Real Time Monitoring",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: stationMap.keys.map((station) {
-                        final isSelected = selectedStation == station;
-                        return SizedBox(
-                          width: MediaQuery.of(context).size.width / 2.2,
-                          height: 65,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  isSelected ? Colors.green.shade600 : Colors.blue.shade50,
-                              foregroundColor:
-                                  isSelected ? Colors.white : Colors.blueGrey.shade800,
-                              shadowColor: Colors.blue.shade200,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: stationMap.keys.map((station) {
+                          final isSelected = selectedStation == station;
+                          return SizedBox(
+                            width: MediaQuery.of(context).size.width / 2.2,
+                            height: 65,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    isSelected ? Colors.green.shade600 : Colors.blue.shade50,
+                                foregroundColor:
+                                    isSelected ? Colors.white : Colors.blueGrey.shade800,
+                                shadowColor: Colors.blue.shade200,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: isSelected ? 6 : 2,
                               ),
-                              elevation: isSelected ? 6 : 2,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                selectedStation = station;
-                              });
-                            },
-                            child: Text(
-                              station,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : Colors.blueGrey.shade900,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  selectedStation == null
-                      ? const Center(
-                          child: Text(
-                            "Select a station to view data",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                          ),
-                        )
-                      : (selectedData != null
-                          ? Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: buildSensorCard(selectedData),
-                            )
-                          : const Center(
+                              onPressed: () {
+                                setState(() {
+                                  selectedStation = station;
+                                });
+                              },
                               child: Text(
-                                "This station is under construction 🚧",
+                                station,
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blueGrey),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected ? Colors.white : Colors.blueGrey.shade900,
+                                ),
                               ),
-                            )),
-                ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    selectedStation == null
+                        ? const Center(
+                            child: Text(
+                              "Select a station to view data",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          )
+                        : (selectedData != null
+                            ? Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: buildSensorCard(selectedData),
+                              )
+                            : const Center(
+                                child: Text(
+                                  "This station is under construction 🚧",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blueGrey),
+                                ),
+                              )),
+                  ],
+                ),
               ),
             ),
           ),
@@ -384,7 +400,7 @@ void _showMenuOptions(BuildContext context) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ForecastDataPage(forecastData: forecastData),
+                        builder: (_) => ForecastDataPage(forecastData: forecastData,),
                       ),
                     );
                   }

@@ -12,8 +12,7 @@ import 'profile.dart';
 import 'bottom_nav.dart';
 import 'config.dart';
 import 'utils/sensor_name_mapper.dart'; // ✅ import your mapper
-
-
+import 'background_design.dart'; // ✅ import background design
 
 class ForecastDataPage extends StatefulWidget {
   final Map<String, dynamic> forecastData;
@@ -29,7 +28,7 @@ class ForecastDataPage extends StatefulWidget {
 class _ForecastDataPageState extends State<ForecastDataPage> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
-  int _selectedIndex = 4;
+  int _selectedIndex = 3;
 
   final List<String> pollutantLabels = [
     "PM2.5", "PM10", "NO2", "O3", "SO2", "CO", "NH3"
@@ -179,23 +178,23 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
         actions: [
           // ✅ Sensor selector
          
-          DropdownButton<String>(
-            value: selectedSensor,
-            underline: const SizedBox(),
-            items: sortedKeys.map((sensorKey) {
-              return DropdownMenuItem<String>(
-                value: sensorKey,
-                child: Text(SensorNameMapper.displayName(sensorKey)),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) {
-                setState(() {
-                  selectedSensor = val;
-                });
-              }
-            },
-          ),
+          // DropdownButton<String>(
+          //   value: selectedSensor,
+          //   underline: const SizedBox(),
+          //   items: sortedKeys.map((sensorKey) {
+          //     return DropdownMenuItem<String>(
+          //       value: sensorKey,
+          //       child: Text(SensorNameMapper.displayName(sensorKey)),
+          //     );
+          //   }).toList(),
+          //   onChanged: (val) {
+          //     if (val != null) {
+          //       setState(() {
+          //         selectedSensor = val;
+          //       });
+          //     }
+          //   },
+          // ),
         ],
       ),
       // 
@@ -402,6 +401,8 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+            const BackgroundDesign(), // ✅ background separated
+
               // Title
               Text(
                 "Air Quality Analysis",
@@ -411,6 +412,59 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
                   color: Colors.blue.shade800,
                 ),
               ),
+              const SizedBox(height: 16),
+              // ✅ Sensor selector
+              // DropdownButton<String>(
+              //   value: selectedSensor,
+              //   underline: const SizedBox(),
+              //   items: sortedKeys.map((sensorKey) {
+              //     return DropdownMenuItem<String>(
+              //       value: sensorKey,
+              //       child: Text(SensorNameMapper.displayName(sensorKey)),
+              //     );
+              //   }).toList(),
+              //   onChanged: (val) {
+              //     if (val != null) {
+              //       setState(() {
+              //         selectedSensor = val;
+              //       });
+              //     }
+              //   },
+              // ),
+              Container(
+                width: double.infinity, // full screen width
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12), // rounded corners
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: DropdownButton<String>(
+                  value: selectedSensor,
+                  isExpanded: true, // makes it full width inside container
+                  underline: const SizedBox(), // remove underline
+                  items: sortedKeys.map((sensorKey) {
+                    return DropdownMenuItem<String>(
+                      value: sensorKey,
+                      child: Text(SensorNameMapper.displayName(sensorKey)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        selectedSensor = val;
+                      });
+                    }
+                  },
+                ),
+              ),
+              
               const SizedBox(height: 16),
 
               // Pollutant Chips

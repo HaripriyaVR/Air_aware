@@ -23,18 +23,17 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.white,
       currentIndex: currentIndex,
-      selectedItemColor: Colors.white,
+      selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.black,
       type: BottomNavigationBarType.fixed,
       items: [
         const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
         const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
         const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-        if (isLoggedIn)
-          const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+        const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        //const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
       ],
       onTap: (index) {
         if (index == 0) {
@@ -53,14 +52,14 @@ class BottomNavBar extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => LiveGasPage(phone: phone)),
           );
-        } else if (isLoggedIn && index == 3) {
+        } else if (index == 3) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => ProfilePage(phone: phone ?? "Unknown")),
           );
-        } else if ((!isLoggedIn && index == 3) || index == 4) {
+        } /*else if ((!isLoggedIn && index == 3) || index == 4) {
           showMenu(context);
-        }
+        }*/
 
         onIndexChanged(index); // notify parent
       },

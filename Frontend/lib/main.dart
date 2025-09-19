@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import './home.dart';
+import 'theme.dart';
 
 
 void main() async {
@@ -36,9 +37,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: AppTheme.lightTheme,
       home: const AQIDashboardPage(phone: '9999999999'), // or use const LoginScreen() from otpsent.dart
     );
   }

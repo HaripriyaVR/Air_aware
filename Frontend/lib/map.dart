@@ -151,7 +151,11 @@ Future<void> _fetchUserAQI(double lat, double lon) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Sensor Map")),
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title: 
+          const Text("Sensor Map", style: TextStyle(color: Colors.white)),
+      ),
       body: userLocation == null
           ? const Center(child: CircularProgressIndicator())
           : GoogleMap(
@@ -230,7 +234,7 @@ Future<void> _fetchUserAQI(double lat, double lon) async {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ForecastDataPage(forecastData: forecastData),
+                        builder: (_) => ForecastDataPage(forecastData: forecastData,),
                       ),
                     );
                   }

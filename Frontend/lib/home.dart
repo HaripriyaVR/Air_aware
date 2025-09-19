@@ -284,35 +284,9 @@ Widget build(BuildContext context) {
       iconTheme: const IconThemeData(color: Colors.black),
       // 🔹 Remove leading admin button here
     ),
-<<<<<<< HEAD
 
     // 🔹 Add the Drawer here
     drawer: _buildSidePanel(context),
-
-
-  
-
-       /*body: RefreshIndicator(
-         onRefresh: _refresh,
-         child: FutureBuilder<Map<String, dynamic>?>(
-           future: _aqiFuture,
-           builder: (context, snapshot) {
-             if (snapshot.connectionState != ConnectionState.done) {
-               return const Center(child: CircularProgressIndicator());
-             }
-             if (!snapshot.hasData || snapshot.data == null) {
-              debugPrint('[AQI] Using dummy data');
-              return _buildDashboardUI(dummyData);
-             }
-           return _buildDashboardUI(snapshot.data!);
-           },
-         ),
-       ),*/
-=======
-
-    // 🔹 Add the Drawer here
-    drawer: _buildSidePanel(context),
->>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
 
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -341,45 +315,7 @@ Widget build(BuildContext context) {
       ),
 
 
-<<<<<<< HEAD
-      // ✅ bottom nav bar is inside Scaffold
-      // bottomNavigationBar: BottomNavigationBar(
-      //   currentIndex: _selectedIndex,
-      //   selectedItemColor: Colors.teal,
-      //   unselectedItemColor: Colors.grey,
-      //   type: BottomNavigationBarType.fixed,
-      //   items: [
-      //     const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      //     const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-      //     const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-      //     if (isLoggedIn)
-      //       const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      //     const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-      //   ],
-      //   onTap: (index) {
-      //     if (index == 1) {
-      //       Navigator.pushReplacement(context, MaterialPageRoute(
-      //         builder: (_) => SensorMapPage(phone: widget.phone),
-      //       ));
-      //     } else if (index == 2) {
-      //       Navigator.pushReplacement(context, MaterialPageRoute(
-      //         builder: (_) => LiveGasPage(phone: widget.phone),
-      //       ));
-      //     } else if (isLoggedIn && index == 3) {
-      //       Navigator.push(context, MaterialPageRoute(
-      //         builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
-      //       ));
-      //     } else if ((!isLoggedIn && index == 3) || index == 4) {
-      //       _showMenuOptions(context);
-      //     }
-      //     setState(() {
-      //       _selectedIndex = index;
-      //     });
-      //   },
-      // ),
-=======
      
->>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         isLoggedIn: isLoggedIn,
@@ -887,12 +823,7 @@ Widget buildInfoCardsSection() {
         title: "Dashboard",
         subtitle: "Analyzing and Visualizing Data",
         description:
-<<<<<<< HEAD
-            "The dashboard processes and displays air quality data. "
-            "The backend handles data storage and processing, while the frontend presents graphs and insights for easy monitoring.",
-=======
             "The dashboard collects, processes, and visualizes air-quality data, with the backend handling storage and the frontend providing graphs and insights.",
->>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
         color: Colors.blue,
       ),
     ],

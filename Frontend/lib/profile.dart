@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
 import 'dart:async';
 import 'package:aqmapp/forecast.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +6,6 @@ import 'questions.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-<<<<<<< HEAD
-//import 'package:geocoding/geocoding.dart';
-=======
->>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
 import 'main_scaffold.dart';
 import 'healthreport.dart';
 import 'config.dart';

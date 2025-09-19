@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'profile.dart';
 import 'livegas.dart';
-import 'map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/sensor_name_mapper.dart';
@@ -38,9 +37,9 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
   String? userName; 
 
   final Map<String, Map<String, double>> _sensorLocations = {
-    'lora-v1': {'lat': 10.178385739668958, 'lon': 76.43052237497399},
-    'loradev2': {'lat': 10.17095090340159, 'lon': 76.42962876824544},
-    'lora-v3': {'lat': 10.165, 'lon': 76.420} // Example coordinates for new sensor
+    'lora-v1': {'lat': 10.178322, 'lon': 76.430891},
+    'loradev2': {'lat': 10.18220, 'lon': 76.4285},
+    'lora-v3': {'lat': 10.17325, 'lon': 76.42755} // Example coordinates for new sensor
   };
   
   Future<Map<String, dynamic>?>? _aqiFuture;
@@ -285,6 +284,7 @@ Widget build(BuildContext context) {
       iconTheme: const IconThemeData(color: Colors.black),
       // 🔹 Remove leading admin button here
     ),
+<<<<<<< HEAD
 
     // 🔹 Add the Drawer here
     drawer: _buildSidePanel(context),
@@ -308,6 +308,11 @@ Widget build(BuildContext context) {
            },
          ),
        ),*/
+=======
+
+    // 🔹 Add the Drawer here
+    drawer: _buildSidePanel(context),
+>>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
 
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -336,6 +341,7 @@ Widget build(BuildContext context) {
       ),
 
 
+<<<<<<< HEAD
       // ✅ bottom nav bar is inside Scaffold
       // bottomNavigationBar: BottomNavigationBar(
       //   currentIndex: _selectedIndex,
@@ -371,6 +377,9 @@ Widget build(BuildContext context) {
       //     });
       //   },
       // ),
+=======
+     
+>>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         isLoggedIn: isLoggedIn,
@@ -464,36 +473,14 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
                       fontFamily: 'Poppins',
                     ),
                   ),
-                  // Text("PM2.5: 19µg/m³"),
-                  // Container(
-                  //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  //   decoration: BoxDecoration(
-                  //     color: _aqiColor(aqi).withOpacity(0.1),
-                  //     borderRadius: BorderRadius.circular(12),
-                  //   ),
-                  //   child: Text(
-                  //     '$aqi',
-                  //     style: TextStyle(
-                  //       fontSize: 36,
-                  //       fontWeight: FontWeight.bold,
-                  //       color: _aqiColor(aqi),
-                  //     ),
-                  //   ),
-                  // ),
+                  
                 ],
               ),
             ],
           ),
 
           const SizedBox(height: 10),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Text("PM2.5: $pm25 µg/m³", style: const TextStyle(fontSize: 14)),
-          //     const SizedBox(width: 20),
-          //     Text("PM10: $pm10 µg/m³", style: const TextStyle(fontSize: 14)),
-          //   ],
-          // ),
+          
 
           const SizedBox(height: 24),
           _buildAqiGradientBar(context, aqi),
@@ -900,8 +887,12 @@ Widget buildInfoCardsSection() {
         title: "Dashboard",
         subtitle: "Analyzing and Visualizing Data",
         description:
+<<<<<<< HEAD
             "The dashboard processes and displays air quality data. "
             "The backend handles data storage and processing, while the frontend presents graphs and insights for easy monitoring.",
+=======
+            "The dashboard collects, processes, and visualizes air-quality data, with the backend handling storage and the frontend providing graphs and insights.",
+>>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
         color: Colors.blue,
       ),
     ],

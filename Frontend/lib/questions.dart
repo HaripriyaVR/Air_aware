@@ -30,15 +30,15 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
     'Runny Nose'
   ];
 
-  final List<String> ageOptions = [
+  final List<String> AgeOptions = [
     'Below 18', '18-25', '26-35', '36-45', '46-60', 'Above 60'
   ];
-  final List<String> genderOptions = ['Male', 'Female', 'Other'];
+  final List<String> GenderOptions = ['Male', 'Female', 'Other'];
   final List<String> yesNo = ['Yes', 'No'];
-  final List<String> environmentOptions = [
+  final List<String> EnvironmentOptions = [
     'Urban', 'Suburban', 'Rural', 'Industrial Area', 'Near Highways'
   ];
-  final List<String> occupationOptions = [
+  final List<String> OccupationOptions = [
     'Factory Worker', 'Construction Worker', 'Farmer', 'Office Worker', 'Student', 'Healthcare Worker', 'Other'
   ];
 
@@ -60,13 +60,13 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
     if (doc.docs.isNotEmpty) {
       final data = doc.docs.first.data();
       setState(() {
-        AgeGroup = data['ageGroup'];
-        Gender = data['gender'];
-        RespiratoryIssue = data['respiratoryIssue'];
-        SmokingHistory = data['smokingHistory'];
-        Environment = data['environment'];
-        Occupation = data['occupation'];
-        Symptoms = List<String>.from(data['symptoms'] ?? []);
+        AgeGroup = data['AgeGroup'];
+        Gender = data['Gender'];
+        RespiratoryIssue = data['RespiratoryIssue'];
+        SmokingHistory = data['SmokingHistory'];
+        Environment = data['Environment'];
+        Occupation = data['Occupation'];
+        Symptoms = List<String>.from(data['Symptoms'] ?? []);
       });
     }
   }
@@ -249,13 +249,13 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
         buildDropdown(
           title: '1. What is your age group?',
           value: AgeGroup,
-          options: ageOptions,
+          options: AgeOptions,
           onChanged: (val) => setState(() => AgeGroup = val),
         ),
         buildDropdown(
           title: '2. What is your gender?',
           value: Gender,
-          options: genderOptions,
+          options: GenderOptions,
           onChanged: (val) => setState(() => Gender = val),
         ),
         buildDropdown(
@@ -273,14 +273,14 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
         buildDropdown(
           title: '5. Living Environment',
           value: Environment,
-          options: environmentOptions,
+          options: EnvironmentOptions,
           onChanged: (val) => setState(() => Environment = val),
         ),
         buildCheckboxList(),
         buildDropdown(
           title: '7. Occupational Exposure',
           value: Occupation,
-          options: occupationOptions,
+          options: OccupationOptions,
           onChanged: (val) => setState(() => Occupation = val),
         ),
         const SizedBox(height: 20),

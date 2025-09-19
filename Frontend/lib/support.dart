@@ -1,16 +1,17 @@
-import 'package:aqmapp/livegas.dart';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // ✅ for login state
+<<<<<<< HEAD
 import 'home.dart';
 import 'map.dart';
 import 'profile.dart';
 import 'forecast.dart';
 import 'config.dart';
 import 'bottom_nav.dart';
+=======
+>>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
 import 'background_design.dart'; // ✅ new background design
 
 class SupportPage extends StatefulWidget {
@@ -27,7 +28,7 @@ class _SupportPageState extends State<SupportPage> {
   final TextEditingController _caseController = TextEditingController();
 
   bool _isLoading = false;
-  int _selectedIndex = 0;
+  int _selectedIndex = 3; // ✅ default to Profile
   bool isLoggedIn = false; // ✅ default false
   String? phoneNumber;
 
@@ -85,6 +86,7 @@ class _SupportPageState extends State<SupportPage> {
     }
   }
 
+<<<<<<< HEAD
   // 🔹 Menu Options BottomSheet
   /*void _showMenuOptions(BuildContext context) {
     showModalBottomSheet(
@@ -140,6 +142,8 @@ class _SupportPageState extends State<SupportPage> {
   }*/
 
   // 🔹 Build UI
+=======
+>>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
   @override
   Widget build(BuildContext context){
     final menuIndex = isLoggedIn ? 4 : 3;
@@ -267,6 +271,7 @@ class _SupportPageState extends State<SupportPage> {
         ),
       ),
 
+<<<<<<< HEAD
       // Bottom Nav
       /*bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
@@ -279,6 +284,9 @@ class _SupportPageState extends State<SupportPage> {
           });
         },
       ),*/
+=======
+      
+>>>>>>> cea4e1571716730db2aadbe7cce51a880bb5f0de
     );
   }
 }

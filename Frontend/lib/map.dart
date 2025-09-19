@@ -5,9 +5,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'forecast.dart';
-import 'home.dart';
-import 'livegas.dart';
-import 'profile.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart'; 
@@ -32,9 +29,9 @@ class _SensorMapPageState extends State<SensorMapPage> {
   String? userAqiStatus;
 
   final List<Map<String, dynamic>> sensors = [
-    {"id": "lora-v1", "lat": 10.178385739668958, "lng": 76.43052237497399},
-    {"id": "loradev2", "lat": 10.17095090340159, "lng": 76.42962876824544},
-    {"id": "lora-v3", "lat": 10.165, "lng": 76.420}, // New sensor
+    {"id": "lora-v1", "lat": 10.178322, "lng": 76.430891},
+    {"id": "loradev2", "lat": 10.18220, "lng": 76.4285},
+    {"id": "lora-v3", "lat": 10.17325, "lng": 76.42755}, // New sensor
 
   ];
 

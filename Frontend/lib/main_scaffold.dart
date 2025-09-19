@@ -35,17 +35,16 @@ Widget build(BuildContext context) {
     const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
         const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
         const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-        if (isLoggedIn)
-          const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+        const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        //const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
       ];
 
   return Scaffold(
     body: body,
     bottomNavigationBar: BottomNavigationBar(
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.white,
       currentIndex: currentIndex,
-      selectedItemColor: Colors.white,
+      selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.black,
       type: BottomNavigationBarType.fixed,
       items: navItems,
@@ -73,7 +72,7 @@ Widget build(BuildContext context) {
               builder: (_) => LiveGasPage(phone: phone),
             ),
           );
-        } else if (isLoggedIn && index == profileIndex) {
+        } else if ( index == profileIndex) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -84,9 +83,9 @@ Widget build(BuildContext context) {
               ),
             ),
           );
-        } else if (index == menuIndex) {
+        } /*else if (index == menuIndex) {
           _showMenuOptions(context);
-        }
+        }*/
       },
     ),
   );
@@ -114,7 +113,7 @@ Widget build(BuildContext context) {
                       context,
                       MaterialPageRoute(
                         builder: (_) =>
-                            ForecastDataPage(forecastData: forecastData),
+                            ForecastDataPage(forecastData: forecastData,),
                       ),
                     );
                   }

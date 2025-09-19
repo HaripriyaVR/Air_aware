@@ -1,16 +1,9 @@
-import 'package:aqmapp/livegas.dart';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // ✅ for login state
-import 'home.dart';
-import 'map.dart';
-import 'profile.dart';
-import 'forecast.dart';
-import 'config.dart';
-import 'bottom_nav.dart';
+import 'background_design.dart'; // ✅ new background design
 
 class SupportPage extends StatefulWidget {
   final String? phone; // ✅ to keep navigation consistent
@@ -26,7 +19,7 @@ class _SupportPageState extends State<SupportPage> {
   final TextEditingController _caseController = TextEditingController();
 
   bool _isLoading = false;
-  int _selectedIndex = 0;
+  int _selectedIndex = 3; // ✅ default to Profile
   bool isLoggedIn = false; // ✅ default false
   String? phoneNumber;
 
@@ -48,39 +41,7 @@ class _SupportPageState extends State<SupportPage> {
     });
   }
 
-  Future<Map<String, dynamic>> fetchForecast() async {
-  final response = await http.get(
-    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
-  );
-
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> data = json.decode(response.body);
-
-    // Build a new map of forecasts for each sensor
-    final Map<String, dynamic> forecasts = {};
-
-    data.forEach((sensor, sensorData) {
-      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
-
-      final List<Map<String, dynamic>> filteredForecast = rawForecast
-          .where((item) =>
-              !(item['day'].toString().toLowerCase().contains('today') ||
-                item['day'].toString().toLowerCase().contains('tomorrow')))
-          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
-          .toList();
-
-      forecasts[sensor] = {
-        'forecast': filteredForecast,
-        'updated_at': sensorData['updated_at'],
-      };
-    });
-
-    return forecasts;
-  } else {
-    throw Exception('Failed to fetch forecast data');
-  }
-}
-
+  
   // 🔹 Submit Support Case
   Future<void> _submitSupportCase() async {
     if (!_formKey.currentState!.validate()) return;
@@ -116,61 +77,6 @@ class _SupportPageState extends State<SupportPage> {
     }
   }
 
-  // 🔹 Menu Options BottomSheet
-  void _showMenuOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext bottomSheetContext) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.cloud_outlined),
-              title: const Text('AQI Forecast'),
-              onTap: () async {
-                Navigator.pop(bottomSheetContext);
-                try {
-                  Map<String, dynamic> forecastData = {
-                    "forecast": [],
-                    "updated_at": DateTime.now().toString()
-                  };
-                  if (context.mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ForecastDataPage(forecastData: forecastData),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to load forecast: $e')),
-                    );
-                  }
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.warning_amber_rounded),
-              title: const Text('Support'),
-              onTap: () {
-                Navigator.pop(bottomSheetContext);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SupportPage()),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // 🔹 Build UI
   @override
   Widget build(BuildContext context){
     final menuIndex = isLoggedIn ? 4 : 3;
@@ -183,7 +89,8 @@ class _SupportPageState extends State<SupportPage> {
           key: _formKey,
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              const BackgroundDesign(),
+              const SizedBox(height: 200),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -204,7 +111,7 @@ class _SupportPageState extends State<SupportPage> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.teal,
+                        color: Colors.blue,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -248,7 +155,7 @@ class _SupportPageState extends State<SupportPage> {
                       controller: _caseController,
                       maxLines: 5,
                       decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.report_problem_outlined, color: Colors.teal),
+                        prefixIcon: const Icon(Icons.report_problem_outlined, color: Colors.blue),
                         hintText: "Describe your issue...",
                         alignLabelWithHint: true,
                         filled: true,
@@ -274,7 +181,7 @@ class _SupportPageState extends State<SupportPage> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.teal,
+                          backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -285,7 +192,7 @@ class _SupportPageState extends State<SupportPage> {
                             ? const CircularProgressIndicator(color: Colors.white)
                             : const Text(
                                 "Submit Request",
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,fontStyle: FontStyle.normal,color: Colors.white),
                               ),
                       ),
                     ),
@@ -297,18 +204,7 @@ class _SupportPageState extends State<SupportPage> {
         ),
       ),
 
-      // Bottom Nav
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        isLoggedIn: isLoggedIn,
-        phone: widget.phone,
-        showMenu: _showMenuOptions,
-        onIndexChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
+      
     );
   }
 }

@@ -5,12 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'support.dart';
-import 'home.dart';
-import 'map.dart';
-import 'livegas.dart';
-import 'profile.dart';
 import 'bottom_nav.dart';
-import 'config.dart';
 import 'utils/sensor_name_mapper.dart'; // ✅ import your mapper
 
 
@@ -29,7 +24,7 @@ class ForecastDataPage extends StatefulWidget {
 class _ForecastDataPageState extends State<ForecastDataPage> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
-  int _selectedIndex = 4;
+  int _selectedIndex = 3;
 
   final List<String> pollutantLabels = [
     "PM2.5", "PM10", "NO2", "O3", "SO2", "CO", "NH3"
@@ -198,184 +193,6 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
           ),
         ],
       ),
-      // 
-      
-      // body: SingleChildScrollView(
-      //   padding: const EdgeInsets.all(16),
-      //   child: Column(
-      //     crossAxisAlignment: CrossAxisAlignment.start,
-      //     children: [
-      //       // Title
-      //       Text(
-      //         "Air Quality Analysis",
-      //         style: TextStyle(
-      //           fontSize: 20,
-      //           fontWeight: FontWeight.bold,
-      //           color: Colors.blue.shade800,
-      //         ),
-      //       ),
-      //       const SizedBox(height: 16),
-
-      //       // Pollutant Chips
-      //       SingleChildScrollView(
-      //         scrollDirection: Axis.horizontal,
-      //         child: Row(
-      //           children: List.generate(pollutantLabels.length, (i) {
-      //             final selected = i == selectedIndex;
-      //             return Padding(
-      //               padding: const EdgeInsets.symmetric(horizontal: 6.0),
-      //               child: ChoiceChip(
-      //                 label: Text(
-      //                   pollutantLabels[i],
-      //                   style: TextStyle(
-      //                     fontWeight: FontWeight.w500,
-      //                     color: selected ? Colors.white : Colors.blueGrey.shade700,
-      //                   ),
-      //                 ),
-      //                 selected: selected,
-      //                 onSelected: (_) => setState(() => selectedIndex = i),
-      //                 selectedColor: Colors.green.shade600,
-      //                 backgroundColor: Colors.blue.shade50,
-      //                 shape: RoundedRectangleBorder(
-      //                   borderRadius: BorderRadius.circular(20),
-      //                 ),
-      //               ),
-      //             );
-      //           }),
-      //         ),
-      //       ),
-      //       const SizedBox(height: 16),
-
-      //       // Chart Card
-      //       Card(
-      //         elevation: 3,
-      //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      //         child: Padding(
-      //           padding: const EdgeInsets.all(12.0),
-      //           child: SizedBox(
-      //             height: MediaQuery.of(context).size.height * 0.3,
-      //             child: LineChart(
-      //               LineChartData(
-      //                 minX: 0,
-      //                 maxX: (values.length - 1).toDouble(),
-      //                 minY: minVal,
-      //                 maxY: maxVal,
-      //                 gridData: FlGridData(
-      //                   show: true,
-      //                   drawVerticalLine: false,
-      //                   horizontalInterval: interval,
-      //                   getDrawingHorizontalLine: (value) => FlLine(
-      //                     color: Colors.blue.shade100,
-      //                     strokeWidth: 1,
-      //                   ),
-      //                 ),
-      //                 titlesData: FlTitlesData(
-      //                   leftTitles: AxisTitles(
-      //                     sideTitles: SideTitles(
-      //                       showTitles: true,
-      //                       reservedSize: 48,
-      //                       interval: interval,
-      //                       getTitlesWidget: (value, meta) => Text(
-      //                         value.toStringAsFixed(0),
-      //                         style: const TextStyle(fontSize: 11, color: Colors.black87),
-      //                       ),
-      //                     ),
-      //                   ),
-      //                   bottomTitles: AxisTitles(
-      //                     sideTitles: SideTitles(
-      //                       showTitles: true,
-      //                       interval: 1,
-      //                       getTitlesWidget: (value, meta) {
-      //                         final idx = value.toInt();
-      //                         if (idx < 0 || idx >= labels.length) {
-      //                           return const SizedBox.shrink();
-      //                         }
-      //                         return Text(
-      //                           labels[idx],
-      //                           style: const TextStyle(fontSize: 10, color: Colors.black87),
-      //                         );
-      //                       },
-      //                     ),
-      //                   ),
-      //                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      //                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      //                 ),
-      //                 lineBarsData: [
-      //                   LineChartBarData(
-      //                     spots: values
-      //                         .asMap()
-      //                         .entries
-      //                         .map((e) => FlSpot(e.key.toDouble(), e.value))
-      //                         .toList(),
-      //                     isCurved: true,
-      //                     color: Colors.blue.shade700,
-      //                     barWidth: 3,
-      //                     dotData: FlDotData(show: true),
-      //                     belowBarData: BarAreaData(
-      //                       show: true,
-      //                       gradient: LinearGradient(
-      //                         colors: [
-      //                           Colors.blue.withOpacity(0.3),
-      //                           Colors.green.withOpacity(0.2),
-      //                         ],
-      //                         begin: Alignment.topCenter,
-      //                         end: Alignment.bottomCenter,
-      //                       ),
-      //                     ),
-      //                   ),
-      //                 ],
-      //               ),
-      //             ),
-      //           ),
-      //         ),
-      //       ),
-      //       const SizedBox(height: 20),
-
-      //       // Data Table Card
-      //       // Data Table Full Width
-      //       Card(
-      //         elevation: 3,
-      //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      //         child: Padding(
-      //           padding: const EdgeInsets.all(8.0),
-      //           child: SingleChildScrollView(
-      //             scrollDirection: Axis.horizontal, // in case content overflows
-      //             child: SizedBox(
-      //               width: MediaQuery.of(context).size.width - 32, // full screen minus padding
-      //               child: DataTable(
-      //                 headingRowColor: MaterialStateProperty.all(Colors.green.shade50),
-      //                 columnSpacing: 40, // adjust spacing between columns
-      //                 columns: const [
-      //                   DataColumn(
-      //                     label: Text(
-      //                       "Date",
-      //                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-      //                     ),
-      //                   ),
-      //                   DataColumn(
-      //                     label: Text(
-      //                       "Value (µg/m³)",
-      //                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-      //                     ),
-      //                   ),
-      //                 ],
-      //                 rows: List.generate(labels.length, (i) {
-      //                   return DataRow(
-      //                     cells: [
-      //                       DataCell(Text(labels[i], style: const TextStyle(fontSize: 13))),
-      //                       DataCell(Text(values[i].toStringAsFixed(2),
-      //                           style: const TextStyle(fontSize: 13))),
-      //                     ],
-      //                   );
-      //                 }),
-      //               ),
-      //             ),
-      //           ),
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      // ),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

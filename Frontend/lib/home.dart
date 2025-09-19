@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'profile.dart';
 import 'livegas.dart';
-import 'map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/sensor_name_mapper.dart';
@@ -15,6 +14,8 @@ import 'config.dart';
 import 'admin/login.dart';
 import 'bottom_nav.dart';
 import 'background_design.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 // Example usage inside a widget
 
 
@@ -33,20 +34,23 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
   String? phoneNumber;
   Position? currentLocation;
   int _selectedIndex = 0;
+  String? userName; 
 
   final Map<String, Map<String, double>> _sensorLocations = {
-    'lora-v1': {'lat': 10.178385739668958, 'lon': 76.43052237497399},
-    'loradev2': {'lat': 10.17095090340159, 'lon': 76.42962876824544},
-    'lora-v3': {'lat': 10.165, 'lon': 76.420} // Example coordinates for new sensor
+    'lora-v1': {'lat': 10.178322, 'lon': 76.430891},
+    'loradev2': {'lat': 10.18220, 'lon': 76.4285},
+    'lora-v3': {'lat': 10.17325, 'lon': 76.42755} // Example coordinates for new sensor
   };
   
   Future<Map<String, dynamic>?>? _aqiFuture;
+  Map<String, dynamic> sensorAqi = {};
 
   @override
   void initState() {
     super.initState();
     _aqiFuture = _fetchRealtimeAQI();
     _loadLoginState();
+    _fetchSensorAQI();
   }
 
   Future<void> _loadLoginState() async {
@@ -74,6 +78,23 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
       );
     }
   }
+
+  Future<String?> _getUserNameByPhone(String phone) async {
+  final snapshot = await FirebaseFirestore.instance
+      .collection('register')
+      .where('phone', isEqualTo: phone)
+      .limit(1)
+      .get();
+
+  if (snapshot.docs.isNotEmpty) {
+    final data = snapshot.docs.first.data();
+    // Safely get 'name'
+    if (data.containsKey('name') && data['name'] != null) {
+      return data['name'] as String;
+    }
+  }
+  return null;
+}
 
   Future<Position?> getUserLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -199,6 +220,50 @@ class _AQIDashboardPageState extends State<AQIDashboardPage> {
 }
 
 
+Future<void> _fetchSensorAQI() async {
+  try {
+    debugPrint("📡 Fetching sensor AQI from: ${AppConfig.aqiSummary}");
+    final response = await http.get(Uri.parse(AppConfig.aqiSummary));
+
+    debugPrint("📥 Response [${response.statusCode}]: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+
+      if (json['success'] == true && json['data'] != null) {
+        final Map<String, dynamic> rawData =
+            Map<String, dynamic>.from(json['data']);
+
+        // 🔹 Build a new map with both sensorId and stationName
+        final Map<String, dynamic> mappedData = {};
+
+        rawData.forEach((sensorId, sensorData) {
+          final displayName = SensorNameMapper.displayName(sensorId);
+          final updatedSensorData = Map<String, dynamic>.from(sensorData);
+
+          updatedSensorData['sensorId'] = sensorId;
+          updatedSensorData['sensorName'] = displayName;
+
+          mappedData[sensorId] = updatedSensorData;
+        });
+
+        setState(() {
+          sensorAqi = mappedData;
+        });
+
+        debugPrint("✅ Sensor AQI updated with station names: $sensorAqi");
+      } else {
+        debugPrint("❌ Backend error or missing data");
+      }
+    } else {
+      debugPrint("❌ Failed to load AQI: ${response.statusCode}");
+    }
+  } catch (e) {
+    debugPrint("❌ Error fetching AQI: $e");
+  }
+}
+
+
 
 Future<void> _refresh() async {
   if (!mounted) return;
@@ -208,73 +273,20 @@ Future<void> _refresh() async {
   });
 }
 
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor:  Colors.blue,
+      elevation: 1,
+      centerTitle: true,
+      title: const Text("AIR AWARE", style: TextStyle(color: Colors.black)),
+      iconTheme: const IconThemeData(color: Colors.black),
+      // 🔹 Remove leading admin button here
+    ),
 
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        elevation: 1,
-        title: const Text("", style: TextStyle(color: Colors.black)),
-        iconTheme: const IconThemeData(color: Colors.black),
-
-        // 👈 Left side Admin button
-        leading: TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminLoginPage()),
-            );
-          },
-          icon: const Icon(Icons.admin_panel_settings, color: Colors.teal),
-          label: const Text("", style: TextStyle(color: Colors.teal)),
-        ),
-
-        // 👉 Right side Login/Logout buttons
-        actions: [
-          if (!isLoggedIn)
-            TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              icon: const Icon(Icons.login, color: Colors.teal),
-              label: const Text("Login", style: TextStyle(color: Colors.teal)),
-            )
-          else
-            TextButton.icon(
-              onPressed: () async {
-                await logout();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Logged out")),
-                );
-              },
-              icon: const Icon(Icons.logout, color: Colors.red),
-              label: const Text("Logout", style: TextStyle(color: Colors.red)),
-            ),
-        ],
-      ),
-
-      // body: RefreshIndicator(
-      //   onRefresh: _refresh,
-      //   child: FutureBuilder<Map<String, dynamic>?>(
-      //     future: _aqiFuture,
-      //     builder: (context, snapshot) {
-      //       if (snapshot.connectionState != ConnectionState.done) {
-      //         return const Center(child: CircularProgressIndicator());
-      //       }
-      //       if (!snapshot.hasData || snapshot.data == null) {
-      //         debugPrint('[AQI] Using dummy data');
-      //         return _buildDashboardUI(dummyData);
-      //       }
-      //       return _buildDashboardUI(snapshot.data!);
-      //     },
-      //   ),
-      // ),
+    // 🔹 Add the Drawer here
+    drawer: _buildSidePanel(context),
 
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -303,42 +315,8 @@ Future<void> _refresh() async {
       ),
 
 
-      // ✅ bottom nav bar is inside Scaffold
-      // bottomNavigationBar: BottomNavigationBar(
-      //   currentIndex: _selectedIndex,
-      //   selectedItemColor: Colors.teal,
-      //   unselectedItemColor: Colors.grey,
-      //   type: BottomNavigationBarType.fixed,
-      //   items: [
-      //     const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      //     const BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-      //     const BottomNavigationBarItem(icon: Icon(Icons.devices), label: "Stations"),
-      //     if (isLoggedIn)
-      //       const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      //     const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-      //   ],
-      //   onTap: (index) {
-      //     if (index == 1) {
-      //       Navigator.pushReplacement(context, MaterialPageRoute(
-      //         builder: (_) => SensorMapPage(phone: widget.phone),
-      //       ));
-      //     } else if (index == 2) {
-      //       Navigator.pushReplacement(context, MaterialPageRoute(
-      //         builder: (_) => LiveGasPage(phone: widget.phone),
-      //       ));
-      //     } else if (isLoggedIn && index == 3) {
-      //       Navigator.push(context, MaterialPageRoute(
-      //         builder: (_) => ProfilePage(phone: phoneNumber ?? "Unknown"),
-      //       ));
-      //     } else if ((!isLoggedIn && index == 3) || index == 4) {
-      //       _showMenuOptions(context);
-      //     }
-      //     setState(() {
-      //       _selectedIndex = index;
-      //     });
-      //   },
-      // ),
-      bottomNavigationBar: BottomNavBar(
+     
+     bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         isLoggedIn: isLoggedIn,
         phone: widget.phone,
@@ -398,7 +376,7 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
                     ),
                     decoration: BoxDecoration(
                       color: _aqiColor(aqi),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                     child: Text(
                       status,
@@ -431,43 +409,30 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
                       fontFamily: 'Poppins',
                     ),
                   ),
-                  // Text("PM2.5: 19µg/m³"),
-                  // Container(
-                  //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  //   decoration: BoxDecoration(
-                  //     color: _aqiColor(aqi).withOpacity(0.1),
-                  //     borderRadius: BorderRadius.circular(12),
-                  //   ),
-                  //   child: Text(
-                  //     '$aqi',
-                  //     style: TextStyle(
-                  //       fontSize: 36,
-                  //       fontWeight: FontWeight.bold,
-                  //       color: _aqiColor(aqi),
-                  //     ),
-                  //   ),
-                  // ),
+                  
                 ],
               ),
             ],
           ),
 
           const SizedBox(height: 10),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Text("PM2.5: $pm25 µg/m³", style: const TextStyle(fontSize: 14)),
-          //     const SizedBox(width: 20),
-          //     Text("PM10: $pm10 µg/m³", style: const TextStyle(fontSize: 14)),
-          //   ],
-          // ),
+          
 
           const SizedBox(height: 24),
           _buildAqiGradientBar(context, aqi),
           const SizedBox(height: 24),
           _buildWeatherCard(temp, hum, pre),
           const SizedBox(height: 20),
-          Text("Last Update:  $time", style: const TextStyle(color: Colors.grey)),
+          Center(
+  child: Text(
+    "Last Update:  $time",
+    style: const TextStyle(color: Colors.grey),
+  ),
+),
+          const SizedBox(height: 20),
+        _buildStationRanking(context),
+        const SizedBox(height: 20),
+        buildInfoCardsSection(),
         ],
       ),
   );
@@ -476,83 +441,96 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
 
 
   Widget _buildAqiGradientBar(BuildContext context, int aqi) {
-    final levels = [
-      {"label": "Good", "color": Colors.green, "min": 0.0, "max": 50.0},
-      {"label": "Satisfactory", "color": Colors.yellow, "min": 51.0, "max": 100.0},
-      {"label": "Moderate", "color": Colors.orange, "min": 101.0, "max": 200.0},
-      {"label": "Poor", "color": Colors.red, "min": 201.0, "max": 300.0},
-      {"label": "Very Poor", "color": Colors.purple, "min": 301.0, "max": 400.0},
-      {"label": "Severe", "color": Colors.brown, "min": 401.0, "max": 500.0},
-    ];
+  final levels = [
+    {"label": "Good", "color": Colors.green, "min": 0.0, "max": 50.0},
+    {"label": "Satisfactory", "color": Colors.yellow, "min": 51.0, "max": 100.0},
+    {"label": "Moderate", "color": Colors.orange, "min": 101.0, "max": 200.0},
+    {"label": "Poor", "color": Colors.red, "min": 201.0, "max": 300.0},
+    {"label": "Very Poor", "color": Colors.purple, "min": 301.0, "max": 400.0},
+    {"label": "Severe", "color": Colors.brown, "min": 401.0, "max": 500.0},
+  ];
 
-    const double totalRange = 500.0;
-    final double barWidth = MediaQuery.of(context).size.width - 32;
+  const double totalRange = 500.0;
+  final double barWidth = MediaQuery.of(context).size.width - 32;
 
-    List<Color> colors = [];
-    List<double> stops = [];
-    double accumulated = 0.0;
+  List<Color> colors = [];
+  List<double> stops = [];
+  double accumulated = 0.0;
 
-    for (var level in levels) {
-      final double min = level['min'] as double;
-      final double max = level['max'] as double;
-      final double span = max - min;
+  for (var level in levels) {
+    final double min = level['min'] as double;
+    final double max = level['max'] as double;
+    final double span = max - min;
 
-      colors.add(level['color'] as Color);
-      stops.add(accumulated / totalRange);
-      accumulated += span;
+    colors.add(level['color'] as Color);
+    stops.add(accumulated / totalRange);
+    accumulated += span;
+  }
+
+  stops.add(1.0);
+  colors.add(colors.last);
+
+  double arrowLeft = 0.0;
+  double aqiDouble = aqi.toDouble();
+  accumulated = 0.0;
+
+  for (var level in levels) {
+    final double min = level['min'] as double;
+    final double max = level['max'] as double;
+
+    if (aqiDouble >= min && aqiDouble <= max) {
+      double ratioInSegment = (aqiDouble - min) / (max - min);
+      arrowLeft = (accumulated + ratioInSegment * (max - min)) / totalRange * barWidth;
+      break;
     }
+    accumulated += (max - min);
+  }
 
-    stops.add(1.0);
-    colors.add(colors.last);
-
-    double arrowLeft = 0.0;
-    double aqiDouble = aqi.toDouble();
-    accumulated = 0.0;
-
-    for (var level in levels) {
-      final double min = level['min'] as double;
-      final double max = level['max'] as double;
-
-      if (aqiDouble >= min && aqiDouble <= max) {
-        double ratioInSegment = (aqiDouble - min) / (max - min);
-        arrowLeft = (accumulated + ratioInSegment * (max - min)) / totalRange * barWidth;
-        break;
-      }
-      accumulated += (max - min);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            Container(
-              height: 16,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                gradient: LinearGradient(
-                  colors: colors,
-                  stops: stops,
-                ),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Stack(
+        children: [
+          Container(
+            height: 16,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                colors: colors,
+                stops: stops,
               ),
             ),
-            Positioned(
-              left: arrowLeft.clamp(0, barWidth - 20),
-              top: -4,
-              child: const Icon(Icons.arrow_drop_down, size: 24, color: Colors.black),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: levels
-              .map((e) => Text(e['label'] as String, style: const TextStyle(fontSize: 10)))
-              .toList(),
-        )
-      ],
-    );
-  }
+          ),
+          Positioned(
+            left: arrowLeft.clamp(0, barWidth - 20),
+            top: -4,
+            child: const Icon(Icons.arrow_drop_down, size: 24, color: Colors.black),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: levels.map((e) {
+          final double min = e['min'] as double;
+          final double max = e['max'] as double;
+          return Column(
+            children: [
+              Text(
+                e['label'] as String,
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+              ),
+              Text(
+                '${min.toInt()}–${max.toInt()}',
+                style: const TextStyle(fontSize: 9, color: Colors.grey),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    ],
+  );
+}
 
   Widget _buildWeatherCard(String temp, String hum, String pre) {
     return Card(
@@ -583,6 +561,406 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
     );
   }
 
+  String extractParenthesis(String input) {
+  final match = RegExp(r'\((.*?)\)').firstMatch(input);
+  return match != null ? match.group(1)! : input;
+}
+
+  Widget _buildStationRanking(BuildContext context) {
+  if (sensorAqi.isEmpty) {
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Text(
+        'No station AQI data available',
+        style: TextStyle(fontSize: 16, color: Colors.grey),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  final stations = sensorAqi.values.toList()
+    ..sort((a, b) => (a['aqi'] as int).compareTo(b['aqi'] as int));
+
+  return Padding(
+    padding: const EdgeInsets.all(12.0),
+    child: Column(
+      children: [
+        const Text(
+          'Stations Ranking',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              // Header row
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                color: Colors.grey.shade200,
+                child: Row(
+                  children: const [
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: Text(
+                          'Rank',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 12), // header padding
+                          child: Text(
+                            'Station',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Center(
+                        child: Text(
+                          'AQI',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 1),
+              // Data rows
+              ...List.generate(stations.length, (index) {
+                final station = stations[index];
+                final sensorId = station['sensorId'];
+                final rawStationName = station['sensorName'] ?? 'Unknown Station';
+                final stationName = extractParenthesis(rawStationName);
+                final aqi = station['aqi'] ?? 'N/A';
+
+                Color aqiColor;
+                if (aqi is int) {
+                  if (aqi <= 50) {
+                    aqiColor = Colors.green;
+                  } else if (aqi <= 100) {
+                    aqiColor = Colors.yellow.shade700;
+                  } else if (aqi <= 200) {
+                    aqiColor = Colors.orange;
+                  } else if (aqi <= 300) {
+                    aqiColor = Colors.red;
+                  } else {
+                    aqiColor = Colors.purple;
+                  }
+                } else {
+                  aqiColor = Colors.grey;
+                }
+
+                return Column(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LiveGasPage(
+                              phone: widget.phone,
+                              preselectedSensorId: sensorId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Center(child: Text('${index + 1}')),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 12),
+                                  child: Text(
+                                    stationName,
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Center(
+                                child: Text(
+                                  '$aqi',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: aqiColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1, thickness: 1),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+Widget _buildInfoCard({
+  required IconData icon,
+  required String title,
+  String? subtitle,
+  required String description,
+  Color? color,
+}) {
+  return Card(
+    elevation: 4,
+    margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon circle
+          Container(
+            decoration: BoxDecoration(
+              color: (color ?? Colors.teal).withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Icon(icon, color: color ?? Colors.teal, size: 28),
+          ),
+          const SizedBox(width: 16),
+          // Text content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blueGrey[600],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// --- All Cards Together in One Widget ---
+Widget buildInfoCardsSection() {
+  return Column(
+    children: [
+      _buildInfoCard(
+        icon: Icons.sensors,
+        title: "Sensors",
+        subtitle: "For Air Quality Detection",
+        description:
+            "Our network of air quality sensors continuously monitors pollutants such as PM2.5, PM10, temperature, humidity, and pressure. "
+            ,
+        color: Colors.teal,
+      ),
+      _buildInfoCard(
+        icon: Icons.health_and_safety,
+        title: "Health Assessment",
+        subtitle: "Your Personalized Risk",
+        description:
+            "The assessment helps understand your exposure to air pollution and provides personalized recommendations.",
+        color: Colors.orange,
+      ),
+      _buildInfoCard(
+        icon: Icons.dashboard_customize,
+        title: "Dashboard",
+        subtitle: "Analyzing and Visualizing Data",
+        description:
+            "The dashboard collects, processes, and visualizes air-quality data, with the backend handling storage and the frontend providing graphs and insights.",
+        color: Colors.blue,
+      ),
+    ],
+  );
+}
+Widget _buildSidePanel(BuildContext context) {
+  return Drawer(
+    child: ListView(
+      padding: EdgeInsets.zero,
+      children: [
+       // Drawer Header
+UserAccountsDrawerHeader(
+  accountName: FutureBuilder<String?>(
+    future: _getUserNameByPhone(phoneNumber ?? ''),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Text('Loading...');
+      } else if (snapshot.hasError) {
+        return const Text('Error loading name');
+      } else if (snapshot.hasData && snapshot.data != null) {
+        return Text(
+          'Welcome ${snapshot.data!}', // 👈 Welcome + username
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        );
+      } else {
+        return const Text(
+          'Guest User',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        );
+      }
+    },
+  ),
+  // 👇 Instead of phone, show nothing (or a tagline)
+  accountEmail: const Text(
+    '', // leave blank or add a tagline
+    style: TextStyle(fontSize: 0), // or remove entirely
+  ),
+  currentAccountPicture: const CircleAvatar(
+    backgroundColor: Colors.white,
+    child: Icon(Icons.person, size: 40, color: Colors.teal),
+  ),
+  decoration: const BoxDecoration(color: Colors.teal),
+),
+
+
+
+        // Admin Login
+        ListTile(
+          leading: const Icon(Icons.admin_panel_settings, color: Colors.teal),
+          title: const Text("Admin"),
+          onTap: () {
+            Navigator.pop(context); // Close drawer
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminLoginPage()),
+            );
+          },
+        ),
+
+        // Manage Account
+        ListTile(
+          leading: const Icon(Icons.manage_accounts, color: Colors.teal),
+          title: const Text("Manage Account"),
+          onTap: () {
+            Navigator.pop(context);
+            if (isLoggedIn) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) =>
+                        ProfilePage(phone: phoneNumber ?? "Unknown")),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Please log in to manage your account.'),
+              ));
+            }
+          },
+        ),
+
+        // Settings
+        ListTile(
+          leading: const Icon(Icons.settings, color: Colors.teal),
+          title: const Text("Settings"),
+          onTap: () {
+            Navigator.pop(context);
+            // Navigate to Settings page (create one if not existing)
+          },
+        ),
+
+        // Help & Support
+        ListTile(
+          leading: const Icon(Icons.help_outline, color: Colors.teal),
+          title: const Text("Help & Support"),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SupportPage()),
+            );
+          },
+        ),
+
+        const Divider(),
+
+        // Login / Logout dynamically
+        if (isLoggedIn)
+          // Logout Option
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text("Logout"),
+            onTap: () async {
+              Navigator.pop(context);
+              await logout();
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Logged out successfully")));
+            },
+          )
+        else
+          // Login Option
+          ListTile(
+            leading: const Icon(Icons.login, color: Colors.teal),
+            title: const Text("Login"),
+            onTap: () {
+              Navigator.pop(context);
+              // Navigate to your Login Page (replace with your own login widget)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+          ),
+      ],
+    ),
+  );
+}
+
   void _showMenuOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -603,7 +981,7 @@ Widget _buildDashboardUI(Map<String, dynamic> data) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ForecastDataPage(forecastData: forecastData),
+                        builder: (_) => ForecastDataPage(forecastData: forecastData,),
                       ),
                     );
                   }

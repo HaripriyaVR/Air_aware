@@ -440,6 +440,19 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
     );
   }
 
+  String capitalizeFirst(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
+}
+
+String capitalizeWords(String text) {
+  return text.split(RegExp(r'[_\s]+')).map((word) {
+    if (word.isEmpty) return '';
+    return word[0].toUpperCase() + word.substring(1);
+  }).join(' ');
+}
+
+
   Widget _buildHealthAssessmentCard() {
     return Container(
       decoration: BoxDecoration(
@@ -484,13 +497,14 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                    text: "${e.key}: ",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white)),
-                                TextSpan(
-                                    text: "${e.value}",
-                                    style: const TextStyle(color: Colors.white)),
+  text: "${capitalizeWords(e.key)}: ",
+  style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.white)),
+TextSpan(
+  text: capitalizeWords(e.value),
+  style: const TextStyle(color: Colors.white)),
+
                               ],
                             ),
                           ),

@@ -9,6 +9,7 @@ import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart'; 
 import 'bottom_nav.dart';
+import 'package:geocoding/geocoding.dart';
 
 class SensorMapPage extends StatefulWidget {
   final String? phone;
@@ -32,15 +33,27 @@ class _SensorMapPageState extends State<SensorMapPage> {
     {"id": "lora-v1", "lat": 10.178322, "lng": 76.430891},
     {"id": "loradev2", "lat": 10.18220, "lng": 76.4285},
     {"id": "lora-v3", "lat": 10.17325, "lng": 76.42755}, // New sensor
-
   ];
 
   Map<String, dynamic> sensorAqi = {};
+
+  // Move these inside the State class
+  List<Map<String, dynamic>> filteredSensors = [];
+  String searchQuery = "";
+
+  final TextEditingController searchController = TextEditingController();
+  bool _snackBarShown = false; // Add this to your state class
 
   @override
   void initState() {
     super.initState();
     _initialize();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _initialize() async {
@@ -105,6 +118,60 @@ Future<void> _fetchSensorAQI() async {
   }
 }
 
+// 🔎 Search function
+void _searchSensors(String query) async {
+  setState(() {
+    searchQuery = query.trim();
+    if (query.isEmpty) {
+      filteredSensors = [];
+      _snackBarShown = false;
+      return;
+    }
+
+    filteredSensors = sensors.where((sensor) {
+      final displayName = SensorNameMapper.displayName(sensor["id"]);
+      return displayName.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+  });
+
+  // If no sensors found → show place on map and notify only once
+  if (filteredSensors.isEmpty && !_snackBarShown) {
+    _snackBarShown = true;
+    // Try to geocode the place name
+    try {
+      List<Location> locations = await locationFromAddress(searchQuery);
+      if (locations.isNotEmpty && mapController != null) {
+        final loc = locations.first;
+        mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(LatLng(loc.latitude, loc.longitude), 16),
+        );
+      }
+    } catch (e) {
+      // Geocoding failed, do nothing
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("sensors are not available here")),
+      );
+    }
+  } else if (filteredSensors.isNotEmpty) {
+    _snackBarShown = false;
+  }
+}
+
+// 🎯 Focus on a selected sensor
+void _focusOnSensor(Map<String, dynamic> sensor) {
+  final position = LatLng(sensor["lat"], sensor["lng"]);
+  mapController?.animateCamera(
+    CameraUpdate.newLatLngZoom(position, 16),
+  );
+  setState(() {
+    filteredSensors = []; // Hide dropdown
+    searchQuery = ""; // 🔥 this hides the container
+    searchController.clear(); // <-- Clear the search field
+  });
+}
+
 Future<void> _fetchUserAQI(double lat, double lon) async {
   try {
     final url = Uri.parse("${AppConfig.userAqi}?lat=$lat&lon=$lon");
@@ -148,54 +215,151 @@ Future<void> _fetchUserAQI(double lat, double lon) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: 
-          const Text("Sensor Map", style: TextStyle(color: Colors.white)),
-      ),
-      body: userLocation == null
-          ? const Center(child: CircularProgressIndicator())
-          : GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: userLocation!,
-                zoom: 14,
-              ),
-              onMapCreated: (controller) => mapController = controller,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              markers: {
-                Marker(
-                  markerId: const MarkerId("user"),
-                  position: userLocation!,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-                  infoWindow: InfoWindow(
-                    title: "You",
-                    snippet: isLoggedIn
-                        ? (userAqi != null
-                            ? "AQI: $userAqi ($userAqiStatus)"
-                            : userAqiStatus ?? "Fetching AQI...")
-                        : "Login to view AQI",
-                  ),
-                ),
-                ...sensors.map((sensor) {
-                  final String rawId = sensor["id"];
-                  final String displayName = SensorNameMapper.displayName(rawId);
-
-                  final sensorData = sensorAqi[rawId];
-                  final int? aqi = sensorData?['aqi'];
-                  final String? status = sensorData?['status'];
-
-                  return Marker(
-                    markerId: MarkerId(rawId),
-                    position: LatLng(sensor["lat"], sensor["lng"]),
-                    infoWindow: InfoWindow(
-                      title: displayName,
-                      snippet: aqi != null ? "AQI: $aqi ($status)" : "Loading AQI...",
-                    ),
-                  );
-                }).toSet(),
-              },
+     appBar: AppBar(
+        // backgroundColor: Colors.blue,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2196F3), Color(0xFF0D47A1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+          ),
+        ),
+
+        elevation: 4, // shadow
+        title: Container(
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search, color: Colors.black54),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: searchController, // <-- controller is bound here
+                  style: const TextStyle(fontSize: 16),
+                  decoration: const InputDecoration(
+                    hintText: "Search sensors...",
+                    border: InputBorder.none,
+                    isCollapsed: true, // tighter fit
+                  ),
+                  onChanged: _searchSensors,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      body: userLocation == null
+    ? const Center(child: CircularProgressIndicator())
+    : Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: userLocation!,
+              zoom: 14,
+            ),
+            onMapCreated: (controller) => mapController = controller,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            markers: {
+              // User marker
+              Marker(
+                markerId: const MarkerId("user"),
+                position: userLocation!,
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+                infoWindow: InfoWindow(
+                  title: "You",
+                  snippet: isLoggedIn
+                      ? (userAqi != null
+                          ? "AQI: $userAqi ($userAqiStatus)"
+                          : userAqiStatus ?? "Fetching AQI...")
+                      : "Login to view AQI",
+                ),
+              ),
+              // Sensor markers
+              ...sensors.map((sensor) {
+                final String rawId = sensor["id"];
+                final String displayName = SensorNameMapper.displayName(rawId);
+
+                final sensorData = sensorAqi[rawId];
+                final dynamic aqiValue = sensorData?['aqi'];
+                final int? aqi = (aqiValue is int) ? aqiValue : null;
+                final String? status = sensorData?['status'];
+
+                return Marker(
+                  markerId: MarkerId(rawId),
+                  position: LatLng(sensor["lat"], sensor["lng"]),
+                  infoWindow: InfoWindow(
+                    title: displayName,
+                    snippet: aqi != null ? "AQI: $aqi ($status)" : "Loading AQI...",
+                  ),
+                );
+              }).toSet(),
+            },
+          ),
+
+          // 🔽 Dropdown suggestion box
+          if ((filteredSensors != null && filteredSensors.isNotEmpty) || (searchQuery != null && searchQuery.isNotEmpty))
+            Positioned(
+              top: kToolbarHeight + 4,
+              left: 12,
+              right: 12,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Always show searched place
+                    ListTile(
+                      leading: const Icon(Icons.place, color: Colors.blue),
+                      title: Text(searchQuery ?? ""),
+                      onTap: () async {
+                        // Always move map to searched place when tapped
+                        try {
+                          List<Location> locations = await locationFromAddress(searchQuery);
+                          if (locations.isNotEmpty && mapController != null) {
+                            final loc = locations.first;
+                            mapController!.animateCamera(
+                              CameraUpdate.newLatLngZoom(LatLng(loc.latitude, loc.longitude), 16),
+                            );
+                          }
+                        } catch (e) {
+                          // Geocoding failed, do nothing
+                        }
+                        // Show message only once (already handled in _searchSensors)
+                      },
+                    ),
+                    // Show matching sensors
+                    ...(filteredSensors ?? []).map((sensor) {
+                      final displayName = SensorNameMapper.displayName(sensor["id"]);
+                      return ListTile(
+                        leading: const Icon(Icons.sensors),
+                        title: Text(displayName),
+                        onTap: () => _focusOnSensor(sensor),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
       // 
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
@@ -261,36 +425,36 @@ Future<void> _fetchUserAQI(double lat, double lon) async {
     );
   }
 
-    Future<Map<String, dynamic>> fetchForecast() async {
-  final response = await http.get(
-    Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
-  );
+  Future<Map<String, dynamic>> fetchForecast() async {
+    final response = await http.get(
+      Uri.parse('${AppConfig.baseUrl}/api/forecast'), // ✅ API route
+    );
 
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
 
-    // Build a new map of forecasts for each sensor
-    final Map<String, dynamic> forecasts = {};
+      // Build a new map of forecasts for each sensor
+      final Map<String, dynamic> forecasts = {};
 
-    data.forEach((sensor, sensorData) {
-      final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
+      data.forEach((sensor, sensorData) {
+        final List<dynamic> rawForecast = sensorData['forecast'] ?? [];
 
-      final List<Map<String, dynamic>> filteredForecast = rawForecast
-          .where((item) =>
-              !(item['day'].toString().toLowerCase().contains('today') ||
-                item['day'].toString().toLowerCase().contains('tomorrow')))
-          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
-          .toList();
+        final List<Map<String, dynamic>> filteredForecast = rawForecast
+            .where((item) =>
+                !(item['day'].toString().toLowerCase().contains('today') ||
+                  item['day'].toString().toLowerCase().contains('tomorrow')))
+            .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
+            .toList();
 
-      forecasts[sensor] = {
-        'forecast': filteredForecast,
-        'updated_at': sensorData['updated_at'],
-      };
-    });
+        forecasts[sensor] = {
+          'forecast': filteredForecast,
+          'updated_at': sensorData['updated_at'],
+        };
+      });
 
-    return forecasts;
-  } else {
-    throw Exception('Failed to fetch forecast data');
+      return forecasts;
+    } else {
+      throw Exception('Failed to fetch forecast data');
+    }
   }
-}
 }

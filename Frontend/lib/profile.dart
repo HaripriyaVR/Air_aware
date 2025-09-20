@@ -332,7 +332,7 @@ if (response.statusCode == 200) {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.black26, width: 2),
                     image: const DecorationImage(
-                      image: AssetImage("icons/male.png"),
+                      image: AssetImage("assets/icon/male.png"),
                       fit: BoxFit.cover, // makes it cover nicely inside the circle
                     ),
                   ),

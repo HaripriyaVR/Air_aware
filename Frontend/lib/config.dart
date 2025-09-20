@@ -4,7 +4,7 @@ class AppConfig {
 
   static const String baseUrl = useEmulator
       ? "http://127.0.0.1:5000" // emulator (localhost)  // Emulator
-      : "http://10.238.183.104:5000"; // Real Device (Wi-Fi)
+      : "http://172.25.1.241:5000"; // Real Device (Wi-Fi)
 
   static const String realtime = "$baseUrl/api/realtime";
   static const String forecast = "$baseUrl/api/forecast";

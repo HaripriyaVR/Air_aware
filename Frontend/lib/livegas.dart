@@ -11,6 +11,8 @@ import 'support.dart';
 import 'config.dart';
 import 'bottom_nav.dart';
 import 'background_design.dart';
+import 'side_panel.dart';
+import 'otpsent.dart';
 
 class LiveGasPage extends StatefulWidget {
   final String? phone;
@@ -73,7 +75,22 @@ static const String _endpoint = '/api/realtime';
       phoneNumber = prefs.getString('phone');
     });
   }
+  Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  setState(() {
+    isLoggedIn = false;
+    phoneNumber = null;
+  });
 
+  if (context.mounted) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
+  }
+}
 /// ✅ Fetch data for all stations by calling /api/realtime?sensor_id=xxx
 Future<void> _fetch() async {
   if (selectedStation == null) return; // No station selected, nothing to fetch
@@ -270,6 +287,17 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
         selectedSensorId != null ? liveData[selectedSensorId] : null;
 
     return Scaffold(
+      
+      appBar: AppBar(
+        backgroundColor: Colors.teal,
+        title: const Text(""),
+        centerTitle: true,
+      ),
+      drawer: SidePanel(
+  isLoggedIn: isLoggedIn,
+  phoneNumber: phoneNumber,
+  onLogout: logout, // pass your logout function
+),
       body: Stack(
         children: [
           const BackgroundDesign(),

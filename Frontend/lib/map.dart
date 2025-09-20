@@ -9,6 +9,10 @@ import 'utils/sensor_name_mapper.dart';
 import 'support.dart';
 import 'config.dart'; 
 import 'bottom_nav.dart';
+import 'side_panel.dart';
+import 'otpsent.dart';
+
+
 
 class SensorMapPage extends StatefulWidget {
   final String? phone;
@@ -59,6 +63,24 @@ class _SensorMapPageState extends State<SensorMapPage> {
       phoneNumber = prefs.getString('phone');
     });
   }
+
+  Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  setState(() {
+    isLoggedIn = false;
+    phoneNumber = null;
+  });
+
+  if (context.mounted) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
+  }
+}
+
 
   Future<void> _getUserLocation() async {
     bool serviceEnabled;
@@ -153,6 +175,12 @@ Future<void> _fetchUserAQI(double lat, double lon) async {
         title: 
           const Text("Sensor Map", style: TextStyle(color: Colors.white)),
       ),
+      drawer: SidePanel(
+  isLoggedIn: isLoggedIn,
+  phoneNumber: phoneNumber,
+  onLogout: logout, // pass your logout function
+),
+
       body: userLocation == null
           ? const Center(child: CircularProgressIndicator())
           : GoogleMap(

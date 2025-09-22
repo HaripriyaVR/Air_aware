@@ -12,6 +12,8 @@ import 'config.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'otpsent.dart';
+import 'otpsent.dart';
+import 'side_panel.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? phone;
@@ -75,6 +77,23 @@ class _ProfilePageState extends State<ProfilePage> {
       _isLoggedIn = loggedIn;
       _phone = phone;
     });
+  }
+}
+
+  Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  setState(() {
+    _isLoggedIn = false;
+    _phone = null;
+  });
+
+  if (context.mounted) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
   }
 }
 
@@ -308,6 +327,12 @@ if (response.statusCode == 200) {
           backgroundColor: Colors.white,
           elevation: 0,
         ),
+        drawer: SidePanel(
+  isLoggedIn: _isLoggedIn,
+  phoneNumber: _phone,
+  onLogout: logout, // pass your logout function
+),
+
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(

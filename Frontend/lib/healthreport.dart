@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:async';
 import 'dart:typed_data';
@@ -351,6 +350,51 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
           key: _pdfKey,
           child: Column(
             children: [
+              // User Info Card at the top
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+                ),
+                child: Row(
+                  children: [
+                    // Profile image (placeholder if not available)
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.teal.shade100,
+                      backgroundImage: AssetImage('assets/profile_placeholder.png'), // Replace with actual image if available
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            phone ?? 'No phone',
+                            style: const TextStyle(
+                              color: Colors.black54,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _buildAQICard(),
               const SizedBox(height: 16),
               _buildHealthAssessmentCard(),
@@ -367,7 +411,7 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.green.shade400, Colors.yellow.shade400, Colors.red.shade400],
+          colors: [Colors.green.shade400, Colors.blue.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -378,18 +422,6 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(name,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.white)),
-              Text(phone ?? 'No phone',
-                  style: const TextStyle(color: Colors.white70)),
-            ],
-          ),
           const SizedBox(height: 12),
           Row(children: [
             const Icon(Icons.location_on, color: Colors.white),

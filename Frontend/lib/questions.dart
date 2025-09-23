@@ -267,7 +267,7 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
       ),
       body: Stack(
         children: [
-          const BackgroundDesign(), // Background layer
+          // const BackgroundDesign(), // Background layer
           SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(

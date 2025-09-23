@@ -315,84 +315,82 @@ class _ForecastDataPageState extends State<ForecastDataPage> {
               const SizedBox(height: 16),
 
               // Chart Card
-              Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    child: LineChart(
-                      LineChartData(
-                        minX: 0,
-                        maxX: (values.length - 1).toDouble(),
-                        minY: minVal,
-                        maxY: maxVal,
-                        gridData: FlGridData(
-                          show: true,
-                          drawVerticalLine: false,
-                          horizontalInterval: interval,
-                          getDrawingHorizontalLine: (value) => FlLine(
-                            color: Colors.blue.shade100,
-                            strokeWidth: 1,
-                          ),
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: LineChart(
+                    LineChartData(
+                      // ...existing chart config...
+                      minX: 0,
+                      maxX: (values.length - 1).toDouble(),
+                      minY: minVal,
+                      maxY: maxVal,
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: interval,
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: Colors.blue.shade100,
+                          strokeWidth: 1,
                         ),
-                        titlesData: FlTitlesData(
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 48,
-                              interval: interval,
-                              getTitlesWidget: (value, meta) => Text(
-                                value.toStringAsFixed(0),
-                                style: const TextStyle(fontSize: 11, color: Colors.black87),
-                              ),
-                            ),
-                          ),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              interval: 1,
-                              getTitlesWidget: (value, meta) {
-                                final idx = value.toInt();
-                                if (idx < 0 || idx >= labels.length) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Text(
-                                  labels[idx],
-                                  style: const TextStyle(fontSize: 10, color: Colors.black87),
-                                );
-                              },
-                            ),
-                          ),
-                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        ),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: values
-                                .asMap()
-                                .entries
-                                .map((e) => FlSpot(e.key.toDouble(), e.value))
-                                .toList(),
-                            isCurved: true,
-                            color: Colors.blue.shade700,
-                            barWidth: 3,
-                            dotData: FlDotData(show: true),
-                            belowBarData: BarAreaData(
-                              show: true,
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.blue.withOpacity(0.3),
-                                  Colors.green.withOpacity(0.2),
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 48,
+                            interval: 4.5,
+                            getTitlesWidget: (value, meta) => Text(
+                              value.toStringAsFixed(0),
+                              style: const TextStyle(fontSize: 11, color: Colors.black87),
+                            ),
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: 1,
+                            getTitlesWidget: (value, meta) {
+                              final idx = value.toInt();
+                              if (idx < 0 || idx >= labels.length) {
+                                return const SizedBox.shrink();
+                              }
+                              return Text(
+                                labels[idx],
+                                style: const TextStyle(fontSize: 10, color: Colors.black87),
+                              );
+                            },
+                          ),
+                        ),
+                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      borderData: FlBorderData(show: false), // Remove border from chart
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: values
+                              .asMap()
+                              .entries
+                              .map((e) => FlSpot(e.key.toDouble(), e.value))
+                              .toList(),
+                          isCurved: true,
+                          color: Colors.blue.shade700,
+                          barWidth: 3,
+                          dotData: FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.withOpacity(0.3),
+                                Colors.green.withOpacity(0.2),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

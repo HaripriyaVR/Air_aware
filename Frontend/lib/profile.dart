@@ -32,6 +32,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String? currentLocationName;
   bool _isLoggedIn = false;
   String? _phone;
+  String? gender;
+bool _loadingGender = true;
 
   bool _isDisposed = false;
 
@@ -39,22 +41,65 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _checkLoginState();
-    fetchUserData();
+    fetchUserData(); 
     getUserLocationAndFetchAQI();
   }
 
-  void fetchUserData() async {
-    final snapshot = await FirebaseFirestore.instance
+  
+
+// Combined fetch
+void fetchUserData() async {
+  if (widget.phone == null) {
+    print("Phone is null, cannot fetch user data.");
+    return;
+  }
+
+  try {
+    // 1️⃣ Try questionnaire first
+    final questionnaireSnap = await FirebaseFirestore.instance
+        .collection('questionnaire')
+        .where('phone', isEqualTo: widget.phone)
+        .get();
+
+    if (questionnaireSnap.docs.isNotEmpty && mounted) {
+      final data = questionnaireSnap.docs.first.data();
+      print("Fetched from questionnaire: name=${data['name']}, gender=${data['gender']}");
+
+      setState(() {
+        gender = data['gender'];
+        userName = data['name'] ?? 'User';
+        _loadingGender = false;
+      });
+      return; // ✅ Stop here if found
+    } else {
+      print("No questionnaire entry found for ${widget.phone}");
+    }
+
+    // 2️⃣ Fallback: fetch from register collection
+    final registerSnap = await FirebaseFirestore.instance
         .collection('register')
         .where('phone', isEqualTo: widget.phone)
         .get();
 
-    if (snapshot.docs.isNotEmpty && !_isDisposed && mounted) {
+    if (registerSnap.docs.isNotEmpty && mounted) {
+      final fetchedName = registerSnap.docs.first.data()['name'];
+      print("Fetched from register: name=$fetchedName");
+
       setState(() {
-        userName = snapshot.docs.first.data()['name'];
+        userName = fetchedName;
+        _loadingGender = false;
       });
+    } else {
+      print("No document found in register collection for ${widget.phone}");
+      setState(() => _loadingGender = false);
     }
+  } catch (e) {
+    print("Error fetching user data: $e");
+    setState(() => _loadingGender = false);
   }
+}
+
+
 
   @override
   void dispose() {
@@ -310,179 +355,177 @@ if (response.statusCode == 200) {
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (!_isLoggedIn) {
-    // While waiting or redirecting
+Widget build(BuildContext context) {
+  if (!_isLoggedIn) {
+    // Show loading while redirecting
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
     );
   }
-    return MainScaffold(
-      phone: widget.phone,
-      currentIndex: 3,
-      body: Scaffold(
-        appBar: AppBar(
-          title: const Text("Profile"),
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          elevation: 0,
+
+  return MainScaffold(
+    phone: widget.phone,
+    currentIndex: 3,
+    body: Scaffold(
+      appBar: AppBar(
+        title: const Text("Profile"),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      drawer: SidePanel(
+        isLoggedIn: _isLoggedIn,
+        phoneNumber: _phone,
+        onLogout: logout,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+  child: Container(
+    width: 80,
+    height: 80,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.black26, width: 2),
+      image: DecorationImage(
+        image: AssetImage(
+          _loadingGender
+              ? "assets/icon/male.png"  // placeholder until gender loads
+              : (gender == 'Female'
+                  ? "assets/icon/female.png"
+                  : "assets/icon/male.png"),
         ),
-        drawer: SidePanel(
-  isLoggedIn: _isLoggedIn,
-  phoneNumber: _phone,
-  onLogout: logout, // pass your logout function
+        fit: BoxFit.cover,
+      ),
+    ),
+  ),
 ),
 
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Center(
-              //   child: Container(
-              //     width: 80,
-              //     height: 80,
-              //     decoration: BoxDecoration(
-              //       shape: BoxShape.circle,
-              //       border: Border.all(color: Colors.black26, width: 2),
-              //     ),
-              //     child: const Icon(Icons.person, color: Colors.black, size: 32),
-              //   ),
-              // ),
-              Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black26, width: 2),
-                    image: const DecorationImage(
-                      image: AssetImage("assets/icon/male.png"),
-                      fit: BoxFit.cover, // makes it cover nicely inside the circle
+            const SizedBox(height: 12),
+            Text(
+              "Hi, $userName 👋",
+              style: const TextStyle(
+                  fontSize: 26, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            if (currentLocationName != null)
+              Text(
+                "📍 Your Location: $currentLocationName",
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            const SizedBox(height: 10),
+            if (aqi != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: getAqiColor(aqi!),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.air, size: 30, color: Colors.black),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'User AQI: ${aqi!.toStringAsFixed(1)} ($aqiStatus)',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    if (closestSensor != null && sensorDistance != null)
+                      Text(
+                        'Closest sensor: $closestSensor (${sensorDistance!.toStringAsFixed(2)} km away)',
+                        style: const TextStyle(fontSize: 14),
+                      )
+                    else
+                      const Text(
+                        'No sensor nearby — AQI estimated from nearest sensors',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                  ],
+                ),
+              ),
+            buildProfileCard(
+              icon: Icons.edit,
+              title: "Health Update",
+              color: Colors.orange.shade100,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => QuestionnairePage(
+                      phone: widget.phone,
+                      isEditing: true,
                     ),
                   ),
-                ),
-              ),
-
-
-              Text(
-                "Hi, $userName 👋",
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              if (currentLocationName != null)
-                Text(
-                  "📍 Your Location: $currentLocationName",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              const SizedBox(height: 10),
-              if (aqi != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: getAqiColor(aqi!),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.air, size: 30, color: Colors.black),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'User AQI: ${aqi!.toStringAsFixed(1)} ($aqiStatus)',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      if (closestSensor != null && sensorDistance != null)
-                        Text(
-                          'Closest sensor: $closestSensor (${sensorDistance!.toStringAsFixed(2)} km away)',
-                          style: const TextStyle(fontSize: 14),
-                        )
-                      else
-                        const Text(
-                          'No sensor nearby — AQI estimated from nearest sensors',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                    ],
-                  ),
-                ),
-              buildProfileCard(
-                icon: Icons.edit,
-                title: "Health Update",
-                color: Colors.orange.shade100,
-                onTap: () {
+                );
+              },
+            ),
+            buildProfileCard(
+              icon: Icons.analytics,
+              title: "Health Report",
+              color: Colors.blue.shade100,
+              onTap: () {
+                if (widget.phone != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => QuestionnairePage(
-                        phone: widget.phone,
-                        isEditing: true,
+                      builder: (context) => HealthProfilePage(),
+                    ),
+                  );
+                }
+              },
+            ),
+            buildProfileCard(
+              icon: Icons.trending_up,
+              title: "Forecast Data",
+              color: Colors.green.shade100,
+              onTap: () async {
+                try {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) =>
+                        const Center(child: CircularProgressIndicator()),
+                  );
+
+                  final data = await fetchForecast();
+                  Navigator.pop(context);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ForecastDataPage(
+                        forecastData: data,
                       ),
                     ),
                   );
-                },
-              ),
-              buildProfileCard(
-                icon: Icons.analytics,
-                title: "Health Report",
-                color: Colors.blue.shade100,
-                onTap: () {
-                  if (widget.phone != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HealthProfilePage(),
-                      ),
-                    );
-                  }
-                },
-              ),
-              buildProfileCard(
-                icon: Icons.trending_up,
-                title: "Forecast Data",
-                color: Colors.green.shade100,
-                onTap: () async {
-                  try {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) =>
-                          const Center(child: CircularProgressIndicator()),
-                    );
-
-                    final data = await fetchForecast();
-                    Navigator.pop(context);
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ForecastDataPage(
-                          forecastData: data,
-                        ),
-                      ),
-                    );
-                  } catch (e) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Failed to load forecast: $e")),
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
+                } catch (e) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Failed to load forecast: $e")),
+                  );
+                }
+              },
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Future<Map<String, dynamic>> fetchForecast() async {
     final response =

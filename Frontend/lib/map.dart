@@ -752,38 +752,54 @@ void _startPulsingCircle(LatLng center) {
   });
 }
 Set<Marker> _buildMarkers() {
-    final Set<Marker> allMarkers = {};
+  final Set<Marker> allMarkers = {};
 
-    // Add user marker
-    if (userLocation != null) {
-      allMarkers.add(
-        Marker(
-          markerId: const MarkerId("user"),
-          position: userLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: "You"),
+  // 1️⃣ User marker (blue)
+  if (userLocation != null) {
+    allMarkers.add(
+      Marker(
+        markerId: const MarkerId("user"),
+        position: userLocation!,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        infoWindow: InfoWindow(
+          title: "You",
+          snippet: isLoggedIn
+              ? (userAqi != null
+                  ? "AQI: $userAqi ($userAqiStatus)"
+                  : userAqiStatus ?? "Fetching AQI...")
+              : "Login to view AQI",
         ),
-      );
-    }
-
-    // Add searched marker
-    if (_searchedMarker != null) allMarkers.add(_searchedMarker!);
-
-    // Add sensor markers
-    for (var sensor in sensors) {
-      final String rawId = sensor["id"];
-      final displayName = SensorNameMapper.displayName(rawId);
-      allMarkers.add(
-        Marker(
-          markerId: MarkerId(rawId),
-          position: LatLng(sensor["lat"], sensor["lng"]),
-          infoWindow: InfoWindow(title: displayName),
-        ),
-      );
-    }
-
-    return allMarkers;
+      ),
+    );
   }
+
+  // 2️⃣ Searched marker (orange for station, red for general)
+  if (_searchedMarker != null) {
+    allMarkers.add(_searchedMarker!);
+  }
+
+  // 3️⃣ Sensor markers
+  for (var sensor in sensors) {
+    final String rawId = sensor["id"];
+    final String displayName = SensorNameMapper.displayName(rawId);
+    final sensorData = sensorAqi[rawId];
+    final int? aqi = sensorData?['aqi'];
+    final String? status = sensorData?['status'];
+
+    allMarkers.add(
+      Marker(
+        markerId: MarkerId(rawId),
+        position: LatLng(sensor["lat"], sensor["lng"]),
+        infoWindow: InfoWindow(
+          title: displayName,
+          snippet: aqi != null ? "AQI: $aqi ($status)" : "Loading AQI...",
+        ),
+      ),
+    );
+  }
+
+  return allMarkers;
+}
 
 
 

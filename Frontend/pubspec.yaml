@@ -52,6 +52,7 @@ dependencies:
   open_filex: ^4.4.0
   universal_io: any
   geocoding: ^2.1.0
+  dropdown_button2: ^2.3.9
   #syncfusion_flutter_pdfviewer: ^30.1.40
 
 

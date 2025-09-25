@@ -55,7 +55,7 @@ void fetchUserData() async {
   }
 
   try {
-    // 1️⃣ Try questionnaire first
+    // Get gender from questionnaire
     final questionnaireSnap = await FirebaseFirestore.instance
         .collection('questionnaire')
         .where('phone', isEqualTo: widget.phone)
@@ -63,19 +63,17 @@ void fetchUserData() async {
 
     if (questionnaireSnap.docs.isNotEmpty && mounted) {
       final data = questionnaireSnap.docs.first.data();
-      print("Fetched from questionnaire: name=${data['name']}, gender=${data['gender']}");
+      print("Fetched from questionnaire: gender=${data['gender']}");
 
       setState(() {
         gender = data['gender'];
-        userName = data['name'] ?? 'User';
         _loadingGender = false;
       });
-      return; // ✅ Stop here if found
     } else {
       print("No questionnaire entry found for ${widget.phone}");
     }
 
-    // 2️⃣ Fallback: fetch from register collection
+    // Always get name from register
     final registerSnap = await FirebaseFirestore.instance
         .collection('register')
         .where('phone', isEqualTo: widget.phone)
@@ -87,17 +85,17 @@ void fetchUserData() async {
 
       setState(() {
         userName = fetchedName;
-        _loadingGender = false;
       });
     } else {
       print("No document found in register collection for ${widget.phone}");
-      setState(() => _loadingGender = false);
+      setState(() => userName = 'User');
     }
   } catch (e) {
     print("Error fetching user data: $e");
     setState(() => _loadingGender = false);
   }
 }
+
 
 
 

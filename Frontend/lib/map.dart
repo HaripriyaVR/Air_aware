@@ -793,7 +793,7 @@ Set<Marker> _buildMarkers() {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.teal,
         title: !_isSearching
             ? const Text("Sensor Map", style: TextStyle(color: Colors.white))
             : SizedBox(

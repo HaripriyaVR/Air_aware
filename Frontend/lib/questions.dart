@@ -195,33 +195,43 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(30), // Curve the background border
           ),
-          child: DropdownButtonFormField<String>(
-            value: value,
-            items: options.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-            onChanged: onChanged,
-            decoration: InputDecoration(
-              labelText: title,
-              labelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-              hintText: 'Select',
-              hintStyle: const TextStyle(color: Colors.grey),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: const BorderSide(color: Colors.green),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              // width: 320,
+              child: DropdownButtonFormField<String>(
+                value: value,
+                isDense: true,
+                items: options.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                onChanged: onChanged,
+                decoration: InputDecoration(
+                  labelText: title,
+                  labelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                  hintText: 'Select',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  border: OutlineInputBorder(
+                    
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.green),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.green),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  fillColor: Colors.white,
+                  filled: true,
+
+                ),
+                
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.green),
+                dropdownColor: Colors.white,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: const BorderSide(color: Colors.green),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: const BorderSide(color: Colors.green, width: 2),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              fillColor: Colors.white,
-              filled: true,
             ),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.green),
-            dropdownColor: Colors.white,
           ),
         ),
         const SizedBox(height: 16),

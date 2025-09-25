@@ -355,11 +355,11 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-                ),
+                // decoration: BoxDecoration(
+                //   color: Colors.white,
+                //   borderRadius: BorderRadius.circular(20),
+                //   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+                // ),
                 child: Row(
                   children: [
                     // Profile image (placeholder if not available)
@@ -407,70 +407,73 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
     );
   }
 
+  
+
   Widget _buildAQICard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade400, Colors.blue.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          Row(children: [
-            const Icon(Icons.location_on, color: Colors.white),
-            const SizedBox(width: 8),
+  // Calculate percentage (safe between 0.0 and 1.0)
+  double percent = (userAqi != null && userAqi! <= 500) ? (userAqi! / 500.0) : 0.0;
+
+  // Map percentage to a color (Green -> Red)
+  Color progressColor = Color.lerp(Colors.green, Colors.red, percent)!;
+
+  return Container(
+    
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Row(children: [
+          const Icon(Icons.location_on, color: Colors.black),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(currentLocationName,
+                  style: const TextStyle(color: Colors.black, fontSize: 16))),
+        ]),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            CircularPercentIndicator(
+              radius: 60,
+              lineWidth: 10,
+              percent: percent,
+              center: Text(
+                "${userAqi?.toStringAsFixed(0) ?? 'N/A'}",
+                style: const TextStyle(color: Colors.black),
+              ),
+              progressColor: progressColor,
+              backgroundColor: Colors.black12,
+            ),
+            const SizedBox(width: 16),
             Expanded(
-                child: Text(currentLocationName,
-                    style: const TextStyle(color: Colors.white, fontSize: 16))),
-          ]),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              CircularPercentIndicator(
-                radius: 60,
-                lineWidth: 10,
-                percent: (userAqi != null && userAqi! <= 500) ? (userAqi! / 500.0) : 0,
-                center: Text("${userAqi?.toStringAsFixed(0) ?? 'N/A'}",
-                    style: const TextStyle(color: Colors.white)),
-                progressColor: Colors.white,
-                backgroundColor: Colors.white24,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "AQI Level: $userAqiStatus",
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  if (sensorId != null)
                     Text(
-                      "AQI Level: $userAqiStatus",
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      "You are near station: ${SensorNameMapper.displayName(sensorId!)}",
+                      style: const TextStyle(color: Colors.black, fontSize: 14),
+                    )
+                  else
+                    const Text(
+                      "Nearest station: Unknown",
+                      style: TextStyle(color: Colors.black, fontSize: 14),
                     ),
-                    const SizedBox(height: 4),
-                    if (sensorId != null)
-                      Text(
-                        "You are near station: ${SensorNameMapper.displayName(sensorId!)}",
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                      )
-                    else
-                      const Text(
-                        "Nearest station: Unknown",
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                  ],
-                ),
+                ],
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
 
   String capitalizeFirst(String text) {
   if (text.isEmpty) return text;
@@ -485,30 +488,32 @@ String capitalizeWords(String text) {
 }
 
 
+
   Widget _buildHealthAssessmentCard() {
+  // Calculate percentage safely
+    double percent = (healthScore.clamp(0, 100)) / 100.0;
+
+    // Dynamic progress color (Green = good, Red = bad)
+    Color progressColor = Color.lerp(Colors.green, Colors.red, percent)!;
+
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.teal.shade400, Colors.orange.shade400, Colors.red.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
-      ),
+     
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.health_and_safety, color: Colors.white),
+              Icon(Icons.health_and_safety, color: Colors.black),
               SizedBox(width: 8),
-              Text("Health Assessment",
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
+              Text(
+                "Health Assessment",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -522,21 +527,23 @@ String capitalizeWords(String text) {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.circle, size: 8, color: Colors.white70),
+                        const Icon(Icons.circle, size: 8, color: Colors.black54),
                         const SizedBox(width: 6),
                         Expanded(
                           child: RichText(
                             text: TextSpan(
                               children: [
                                 TextSpan(
-  text: "${capitalizeWords(e.key)}: ",
-  style: const TextStyle(
-      fontWeight: FontWeight.bold,
-      color: Colors.white)),
-TextSpan(
-  text: capitalizeWords(e.value),
-  style: const TextStyle(color: Colors.white)),
-
+                                  text: "${capitalizeWords(e.key)}: ",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: capitalizeWords(e.value),
+                                  style: const TextStyle(color: Colors.black87),
+                                ),
                               ],
                             ),
                           ),
@@ -545,7 +552,7 @@ TextSpan(
                     ),
                   ),
                 ),
-                const Divider(color: Colors.white70, thickness: 0.5),
+                const Divider(color: Colors.black26, thickness: 0.5),
               ],
             ),
           const SizedBox(height: 8),
@@ -554,15 +561,20 @@ TextSpan(
               CircularPercentIndicator(
                 radius: 60,
                 lineWidth: 10,
-                percent: (healthScore.clamp(0, 100)) / 100.0,
-                center: Text("$healthScore", style: const TextStyle(color: Colors.white)),
-                progressColor: Colors.white,
-                backgroundColor: Colors.white24,
+                percent: percent,
+                center: Text(
+                  "$healthScore",
+                  style: const TextStyle(color: Colors.black),
+                ),
+                progressColor: progressColor,
+                backgroundColor: Colors.black12,
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Text("Risk Level: $riskLevel",
-                    style: const TextStyle(color: Colors.white, fontSize: 16)),
+                child: Text(
+                  "Risk Level: $riskLevel",
+                  style: const TextStyle(color: Colors.black, fontSize: 16),
+                ),
               ),
             ],
           ),

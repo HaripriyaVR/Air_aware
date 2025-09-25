@@ -277,10 +277,10 @@ Future<void> _refresh() async {
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      backgroundColor:  Colors.blue,
+      backgroundColor:  Colors.teal,
       elevation: 1,
       centerTitle: true,
-      title: const Text("AIR AWARE", style: TextStyle(color: Colors.black)),
+      title: const Text("Air Aware", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily:'poppins-light')),
       iconTheme: const IconThemeData(color: Colors.black),
       // 🔹 Remove leading admin button here
     ),

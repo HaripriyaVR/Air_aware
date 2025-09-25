@@ -146,23 +146,104 @@ void _showLoginRequiredDialog() {
   showDialog(
     context: context,
     barrierDismissible: false,
+    // builder: (context) => AlertDialog(
+    //   title: const Text("Login Required"),
+    //   content: const Text("You need to log in to view your profile."),
+    //   actions: [
+    //     TextButton(
+    //       onPressed: () {
+    //         Navigator.pop(context); // close the dialog
+    //         // navigate to login page
+    //         Navigator.pushReplacement(
+    //           context,
+    //           MaterialPageRoute(builder: (_) => LoginScreen()), // your login widget
+    //         );
+    //       },
+    //       child: const Text("Go to Login"),
+    //     ),
+    //   ],
+    // ),
+
     builder: (context) => AlertDialog(
-      title: const Text("Login Required"),
-      content: const Text("You need to log in to view your profile."),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context); // close the dialog
-            // navigate to login page
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => LoginScreen()), // your login widget
-            );
-          },
-          child: const Text("Go to Login"),
+  backgroundColor: Colors.green.shade50, // light green background
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(20),
+  ),
+  elevation: 8,
+  titlePadding: const EdgeInsets.all(16),
+  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  actionsPadding: const EdgeInsets.all(16), // uniform padding for button
+
+  title: Row(
+    children: const [
+      Icon(Icons.lock_outline, color: Colors.teal, size: 28),
+      SizedBox(width: 8),
+      Text(
+        "Login Required",
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
         ),
-      ],
+      ),
+    ],
+  ),
+
+  content: const Text(
+    "You need to log in to view your profile.",
+    style: TextStyle(fontSize: 16, color: Colors.black87),
+  ),
+
+  actions: [
+    SizedBox(
+      width: double.infinity, // full width
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.teal, // fallback if gradient is not required
+        ).copyWith(
+          backgroundColor: MaterialStateProperty.resolveWith((states) {
+            return null; // keep transparent, since we’ll use Ink
+          }),
+        ),
+        onPressed: () {
+          Navigator.pop(context); // close dialog
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => LoginScreen()),
+          );
+        },
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Colors.teal, Colors.blue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: const Text(
+              "Go to Login",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
     ),
+  ],
+)
+
+
   );
 }
 
@@ -368,9 +449,14 @@ Widget build(BuildContext context) {
     currentIndex: 3,
     body: Scaffold(
       appBar: AppBar(
-        title: const Text("Profile"),
+        title: const Text(
+          "Profile",
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'poppins',)
+          ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.teal,
         elevation: 0,
       ),
       drawer: SidePanel(

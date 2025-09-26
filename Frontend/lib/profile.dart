@@ -12,7 +12,6 @@ import 'config.dart';
 import 'utils/sensor_name_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'otpsent.dart';
-import 'otpsent.dart';
 import 'side_panel.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -44,12 +43,13 @@ bool _loadingGender = true;
     fetchUserData(); 
     getUserLocationAndFetchAQI();
   }
-
+  
   
 
 // Combined fetch
 void fetchUserData() async {
-  if (widget.phone == null) {
+  final phone = _phone ?? widget.phone; // ✅ use _phone first
+  if (phone == null) {
     print("Phone is null, cannot fetch user data.");
     return;
   }
@@ -58,36 +58,27 @@ void fetchUserData() async {
     // Get gender from questionnaire
     final questionnaireSnap = await FirebaseFirestore.instance
         .collection('questionnaire')
-        .where('phone', isEqualTo: widget.phone)
+        .where('phone', isEqualTo: phone)
         .get();
 
     if (questionnaireSnap.docs.isNotEmpty && mounted) {
       final data = questionnaireSnap.docs.first.data();
-      print("Fetched from questionnaire: gender=${data['gender']}");
-
       setState(() {
         gender = data['gender'];
         _loadingGender = false;
       });
-    } else {
-      print("No questionnaire entry found for ${widget.phone}");
     }
 
     // Always get name from register
     final registerSnap = await FirebaseFirestore.instance
         .collection('register')
-        .where('phone', isEqualTo: widget.phone)
+        .where('phone', isEqualTo: phone)
         .get();
 
     if (registerSnap.docs.isNotEmpty && mounted) {
       final fetchedName = registerSnap.docs.first.data()['name'];
-      print("Fetched from register: name=$fetchedName");
-
-      setState(() {
-        userName = fetchedName;
-      });
+      setState(() => userName = fetchedName);
     } else {
-      print("No document found in register collection for ${widget.phone}");
       setState(() => userName = 'User');
     }
   } catch (e) {
@@ -111,17 +102,22 @@ void fetchUserData() async {
   final phone = prefs.getString('phone');
 
   if (!loggedIn && mounted) {
-    // show dialog after frame renders
     Future.delayed(Duration.zero, () => _showLoginRequiredDialog());
   }
 
   if (mounted) {
     setState(() {
       _isLoggedIn = loggedIn;
-      _phone = phone;
+      _phone = phone; // ✅ Always keep a local phone copy
     });
+
+    // ✅ Fetch user data with the stored phone, not widget.phone
+    if (phone != null) {
+      fetchUserData();
+    }
   }
 }
+
 
   Future<void> logout() async {
   final prefs = await SharedPreferences.getInstance();
@@ -144,24 +140,6 @@ void _showLoginRequiredDialog() {
   showDialog(
     context: context,
     barrierDismissible: false,
-    // builder: (context) => AlertDialog(
-    //   title: const Text("Login Required"),
-    //   content: const Text("You need to log in to view your profile."),
-    //   actions: [
-    //     TextButton(
-    //       onPressed: () {
-    //         Navigator.pop(context); // close the dialog
-    //         // navigate to login page
-    //         Navigator.pushReplacement(
-    //           context,
-    //           MaterialPageRoute(builder: (_) => LoginScreen()), // your login widget
-    //         );
-    //       },
-    //       child: const Text("Go to Login"),
-    //     ),
-    //   ],
-    // ),
-
     builder: (context) => AlertDialog(
   backgroundColor: Colors.green.shade50, // light green background
   shape: RoundedRectangleBorder(

@@ -52,8 +52,12 @@ dependencies:
   open_filex: ^4.4.0
   universal_io: any
   geocoding: ^2.1.0
+<<<<<<< HEAD
   image_picker: ^1.0.7
   firebase_storage: ^13.0.1
+=======
+  dropdown_button2: ^2.3.9
+>>>>>>> 0baabcef6e1120849f63277dbbd9453b443920db
   #syncfusion_flutter_pdfviewer: ^30.1.40
 
 

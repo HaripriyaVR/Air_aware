@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math' show cos, sin, sqrt, atan2, pi;
+import 'package:aqmapp/manage.dart';
 import 'package:aqmapp/otpsent.dart';
 import 'package:aqmapp/forecast.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'admin/login.dart';
 import 'bottom_nav.dart';
 import 'background_design.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'contactus.dart';
 
 // Example usage inside a widget
 
@@ -894,7 +896,7 @@ UserAccountsDrawerHeader(
                 context,
                 MaterialPageRoute(
                     builder: (_) =>
-                        ProfilePage(phone: phoneNumber ?? "Unknown")),
+                        ManageAccountPage(phone: phoneNumber ?? "Unknown")),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -926,6 +928,17 @@ UserAccountsDrawerHeader(
             );
           },
         ),
+        ListTile(
+            leading: const Icon(Icons.contact_page, color: Colors.teal),
+            title: const Text("Contact Us"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ContactUsPage()),
+              );
+            },
+          ),
 
         const Divider(),
 

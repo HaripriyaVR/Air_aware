@@ -1,8 +1,7 @@
 import 'package:aqmapp/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'background_design.dart';
-// import 'package:dropdown_button2/dropdown_button2.dart';
+
 
 class InlineDropdown extends StatefulWidget {
   final String title;
@@ -113,7 +112,7 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
     'Wheezing',
     'Fatigue',
     'Runny Nose',
-    'no symptoms'
+    'No symptoms'
   ];
 
   final List<String> AgeOptions = [
@@ -131,9 +130,7 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
   @override
   void initState() {
     super.initState();
-    if (widget.isEditing) {
-      fetchExistingData();
-    }
+    if (widget.isEditing) fetchExistingData();
   }
 
   Future<void> fetchExistingData() async {
@@ -146,17 +143,16 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
     if (doc.docs.isNotEmpty) {
       final data = doc.docs.first.data();
       setState(() {
-        AgeGroup = data['AgeGroup'];
-        Gender = data['Gender'];
-        RespiratoryIssue = data['RespiratoryIssue'];
-        SmokingHistory = data['SmokingHistory'];
-        Environment = data['Environment'];
-        Occupation = data['Occupation'];
-        Symptoms = List<String>.from(data['Symptoms'] ?? []);
+        AgeGroup = data['ageGroup'] ?? data['AgeGroup'];
+        Gender = data['gender'] ?? data['Gender'];
+        RespiratoryIssue = data['respiratoryIssue'] ?? data['RespiratoryIssue'];
+        SmokingHistory = data['smokingHistory'] ?? data['SmokingHistory'];
+        Environment = data['environment'] ?? data['Environment'];
+        Occupation = data['occupation'] ?? data['Occupation'];
+        Symptoms = List<String>.from(data['symptoms'] ?? data['Symptoms'] ?? []);
       });
     }
   }
-
   int calculateHealthScore() {
     int score = 0;
 
@@ -281,66 +277,6 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
 }
 
 
-
-  // Widget buildDropdown({
-  //   required String title,
-  //   required String? value,
-  //   required List<String> options,
-  //   required Function(String?) onChanged,
-  // }) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const SizedBox(height: 4),
-  //       Container(
-  //         decoration: BoxDecoration(
-  //           color: Colors.white,
-  //           borderRadius: BorderRadius.circular(30), // Curve the background border
-  //         ),
-  //         child: Align(
-  //           alignment: Alignment.centerLeft,
-  //           child: SizedBox(
-  //             // width: 320,
-  //             child: DropdownButtonFormField<String>(
-  //               value: value,
-  //               isDense: true,
-  //               items: options.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-  //               onChanged: onChanged,
-  //               decoration: InputDecoration(
-  //                 labelText: title,
-  //                 labelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-  //                 hintText: 'Select',
-  //                 hintStyle: const TextStyle(color: Colors.grey),
-  //                 border: OutlineInputBorder(
-                    
-  //                   borderRadius: BorderRadius.circular(30),
-  //                   borderSide: const BorderSide(color: Colors.green),
-  //                 ),
-  //                 enabledBorder: OutlineInputBorder(
-  //                   borderRadius: BorderRadius.circular(30),
-  //                   borderSide: const BorderSide(color: Colors.green),
-  //                 ),
-  //                 focusedBorder: OutlineInputBorder(
-  //                   borderRadius: BorderRadius.circular(30),
-  //                   borderSide: const BorderSide(color: Colors.green, width: 2),
-  //                 ),
-  //                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-  //                 fillColor: Colors.white,
-  //                 filled: true,
-
-  //               ),
-                
-  //               icon: const Icon(Icons.arrow_drop_down, color: Colors.green),
-  //               dropdownColor: Colors.white,
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //       const SizedBox(height: 16),
-  //     ],
-  //   );
-  // }
-
  Widget buildCheckboxList() {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,86 +398,6 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
           ),
         ],
       )
-
-      // body: Stack(
-      //   children: [
-      //     // const BackgroundDesign(), // Background layer
-      //     SingleChildScrollView(
-      //       padding: const EdgeInsets.all(20),
-      //       child: Column(
-      //         crossAxisAlignment: CrossAxisAlignment.start,
-      //         children: [
-      //           const SizedBox(height: 8),
-      //           const Text(
-      //             "Health Questionnaire",
-      //             style: TextStyle(
-      //               fontSize: 24,
-      //               fontWeight: FontWeight.bold,
-      //               color: Colors.green,
-      //             ),
-      //           ),
-      //           const SizedBox(height: 20),
-      //           buildDropdown(
-      //             title: '1. What is your age group?',
-      //             value: AgeGroup,
-      //             options: AgeOptions,
-      //             onChanged: (val) => setState(() => AgeGroup = val),
-      //           ),
-      //           buildDropdown(
-      //             title: '2. What is your gender?',
-      //             value: Gender,
-      //             options: GenderOptions,
-      //             onChanged: (val) => setState(() => Gender = val),
-      //           ),
-      //           buildDropdown(
-      //             title: '3. Do you have any respiratory issues?',
-      //             value: RespiratoryIssue,
-      //             options: yesNo,
-      //             onChanged: (val) => setState(() => RespiratoryIssue = val),
-      //           ),
-      //           buildDropdown(
-      //             title: '4. Smoking History',
-      //             value: SmokingHistory,
-      //             options: ['Non-Smoker', 'Occasional Smoker', 'Regular Smoker'],
-      //             onChanged: (val) => setState(() => SmokingHistory = val),
-      //           ),
-      //           buildDropdown(
-      //             title: '5. Living Environment',
-      //             value: Environment,
-      //             options: EnvironmentOptions,
-      //             onChanged: (val) => setState(() => Environment = val),
-      //           ),
-      //           buildCheckboxList(),
-      //           buildDropdown(
-      //             title: '7. Occupational Exposure',
-      //             value: Occupation,
-      //             options: OccupationOptions,
-      //             onChanged: (val) => setState(() => Occupation = val),
-      //           ),
-      //           const SizedBox(height: 20),
-      //           SizedBox(
-      //             width: double.infinity,
-      //             height: 56,
-      //             child: ElevatedButton(
-      //               onPressed: submit,
-      //               style: ElevatedButton.styleFrom(
-      //                 backgroundColor: Colors.green,
-      //                 padding: const EdgeInsets.symmetric(vertical: 14),
-      //                 shape: RoundedRectangleBorder(
-      //                   borderRadius: BorderRadius.circular(30),
-      //                 ),
-      //               ),
-      //               child: Text(
-      //                 widget.isEditing ? "Update" : "Submit",
-      //                 style: const TextStyle(color: Colors.white),
-      //               ),
-      //             ),
-      //           ),
-      //         ],
-      //       ),
-      //     ),
-      //   ],
-      // ),
     );
   }
 }

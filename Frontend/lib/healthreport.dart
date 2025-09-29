@@ -345,29 +345,80 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(2),
         child: RepaintBoundary(
           key: _pdfKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // User Info Card at the top
+              // 🔹 Full-width Heading
+              // 🔹 Full-width Main + Subheading
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main Heading
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                    color: Colors.green.shade100, // pale green background
+                    child: const Text(
+                      "Health Report Summary",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+
+                  // Subheading Ribbon
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 20),
+                    color: Colors.green.shade900, // dark green ribbon
+                    child: const Text(
+                      "Air Quality Monitoring System, Powered by Ministry of Electronics and Information Technology (MeiTy)",
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16), // spacing before content
+                ],
+              ),
+
+
+              // Container(
+              //   width: double.infinity,
+              //   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              //   color: const ui.Color.fromARGB(255, 28, 241, 92), // full-width pale green
+              //   child: const Text(
+              //     "Health Report Summary",
+              //     style: TextStyle(
+              //       fontSize: 18,
+              //       fontWeight: FontWeight.bold,
+              //       color: Colors.black,
+              //     ),
+              //   ),
+              // ),
+
+
+              // User Info Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 margin: const EdgeInsets.only(bottom: 16),
-                // decoration: BoxDecoration(
-                //   color: Colors.white,
-                //   borderRadius: BorderRadius.circular(20),
-                //   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-                // ),
                 child: Row(
                   children: [
-                    // Profile image (placeholder if not available)
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: Colors.teal.shade100,
-                      backgroundImage: AssetImage('assets/profile_placeholder.png'), // Replace with actual image if available
-                    ),
+                    // CircleAvatar(
+                    //   radius: 32,
+                    //   backgroundColor: Colors.teal.shade100,
+                    //   backgroundImage:
+                    //       AssetImage('assets/profile_placeholder.png'),
+                    // ),
                     const SizedBox(width: 20),
                     Expanded(
                       child: Column(
@@ -395,6 +446,7 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
                   ],
                 ),
               ),
+
               _buildAQICard(),
               const SizedBox(height: 16),
               _buildHealthAssessmentCard(),
@@ -404,10 +456,34 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
           ),
         ),
       ),
+
     );
   }
 
-  
+  Widget _buildRecommendationCard(IconData icon, String text) {
+    return Container(
+      width: 160, // adjust width as needed
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.green),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.green, size: 18),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13, color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildAQICard() {
   // Calculate percentage (safe between 0.0 and 1.0)
@@ -472,6 +548,7 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
       ],
     ),
   );
+  
 }
 
 
@@ -583,40 +660,122 @@ String capitalizeWords(String text) {
     );
   }
 
-  Widget _buildCombinedRiskCard(String localCombined, String combinedRec) {
+ Widget _buildCombinedRiskCard(String localCombined, String combinedRec) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.orange.shade300, Colors.red.shade300],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
-      ),
+      // decoration: BoxDecoration(
+      //   gradient: LinearGradient(
+      //     colors: [Colors.orange.shade300, Colors.red.shade300],
+      //     begin: Alignment.topLeft,
+      //     end: Alignment.bottomRight,
+      //   ),
+      //   borderRadius: BorderRadius.circular(20),
+      //   boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+      // ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // const Row(
+          //   children: [
+          //     Icon(Icons.warning_amber_rounded, color: Colors.black),
+          //     SizedBox(width: 8),
+          //     Text(
+          //       "Combined Risk",
+          //       style: TextStyle(
+          //         fontSize: 20,
+          //         fontWeight: FontWeight.bold,
+          //         color: Colors.black,
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          const SizedBox(height: 12),
+          // Text("Risk Level: $localCombined",
+          //     style: const TextStyle(color: Colors.black, fontSize: 16)),
+          // const SizedBox(height: 4),
+          // Text("Advice: $combinedRec",
+          //     style: const TextStyle(color: Colors.black, fontSize: 14)),
+
+          // const SizedBox(height: 20),
+
+          // 🔹 Personalized Health Recommendations
           const Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.white),
+              Icon(Icons.lightbulb, color: Colors.black),
               SizedBox(width: 8),
-              Text("Combined Risk",
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
+              Text(
+                "Personalized Health Recommendations",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          Text("Risk Level: $localCombined",
-              style: const TextStyle(color: Colors.white, fontSize: 16)),
-          const SizedBox(height: 4),
-          Text("Advice: $combinedRec",
-              style: const TextStyle(color: Colors.white, fontSize: 14)),
+
+          // ⬇️ Changed: removed background color, text in black
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            child: const Text(
+              "Official Government Guidelines: Based on CPCB and Kerala State Health Department recommendations.",
+              style: TextStyle(
+                color: Colors.black, // ✅ black text
+                fontSize: 13,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Wrap(
+          //   spacing: 22,
+          //   runSpacing: 22,
+          //   children: [
+          //     _buildRecommendationCard(Icons.check_circle,
+          //         "Perfect air quality - enjoy all outdoor activities"),
+          //     _buildRecommendationCard(Icons.directions_run,
+          //         "Great time for outdoor exercise and sports"),
+          //     _buildRecommendationCard(Icons.open_in_new,
+          //         "Open windows to let fresh air in"),
+          //     _buildRecommendationCard(Icons.child_friendly,
+          //         "Safe conditions for children to play outside"),
+          //   ],
+            
+          // ),
+          Wrap(
+            spacing: 22,
+            runSpacing: 22,
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 2 - 33, // adjust spacing
+                child: _buildRecommendationCard(Icons.check_circle,
+                    "Perfect air quality - enjoy all outdoor activities"),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 2 - 33,
+                child: _buildRecommendationCard(Icons.directions_run,
+                    "Great time for outdoor exercise and sports"),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 2 - 33,
+                child: _buildRecommendationCard(Icons.open_in_new,
+                    "Open windows to let fresh air in"),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 2 - 33,
+                child: _buildRecommendationCard(Icons.child_friendly,
+                    "Safe conditions for children to play outside"),
+              ),
+            ],
+          )
+
         ],
       ),
     );
   }
+
+
+
 }

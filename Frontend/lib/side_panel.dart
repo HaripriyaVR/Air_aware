@@ -1,4 +1,5 @@
 // lib/widgets/side_panel.dart
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +9,8 @@ import 'admin/login.dart';
 import 'profile.dart';
 import 'support.dart';
 import 'otpsent.dart';
+import 'contactus.dart';
+import 'manage.dart';
 
 class SidePanel extends StatefulWidget {
   final bool isLoggedIn;
@@ -104,7 +107,8 @@ class _SidePanelState extends State<SidePanel> {
                   context,
                   MaterialPageRoute(
                       builder: (_) =>
-                          ProfilePage(phone: widget.phoneNumber ?? "Unknown")),
+                          ManageAccountPage(phone: widget.phoneNumber ?? "")
+),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -133,6 +137,17 @@ class _SidePanelState extends State<SidePanel> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SupportPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.contact_page, color: Colors.teal),
+            title: const Text("Contact Us"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ContactUsPage()),
               );
             },
           ),

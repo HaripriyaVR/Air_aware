@@ -53,6 +53,10 @@ dependencies:
   universal_io: any
   geocoding: ^2.1.0
   dropdown_button2: ^2.3.9
+  url_launcher: ^6.2.1
+  font_awesome_flutter: ^10.6.0
+  lottie: ^2.7.0
+  flutter_svg: ^2.0.7 # Add this for SVG support
   #syncfusion_flutter_pdfviewer: ^30.1.40
 
 
@@ -93,6 +97,7 @@ flutter:
     - assets/icon/app_icon.png
     - assets/icon/female.png
     - assets/icon/male.png
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -461,28 +461,31 @@ class _HealthProfilePageState extends State<HealthProfilePage> {
   }
 
   Widget _buildRecommendationCard(IconData icon, String text) {
-    return Container(
-      width: 160, // adjust width as needed
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.green),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.green, size: 18),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 13, color: Colors.black),
-            ),
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.green),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Colors.green, size: 18),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+            softWrap: true,
+            overflow: TextOverflow.visible,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
+
 
 
   Widget _buildAQICard() {
@@ -660,121 +663,63 @@ String capitalizeWords(String text) {
     );
   }
 
- Widget _buildCombinedRiskCard(String localCombined, String combinedRec) {
-    return Container(
-      // decoration: BoxDecoration(
-      //   gradient: LinearGradient(
-      //     colors: [Colors.orange.shade300, Colors.red.shade300],
-      //     begin: Alignment.topLeft,
-      //     end: Alignment.bottomRight,
-      //   ),
-      //   borderRadius: BorderRadius.circular(20),
-      //   boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
-      // ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // const Row(
-          //   children: [
-          //     Icon(Icons.warning_amber_rounded, color: Colors.black),
-          //     SizedBox(width: 8),
-          //     Text(
-          //       "Combined Risk",
-          //       style: TextStyle(
-          //         fontSize: 20,
-          //         fontWeight: FontWeight.bold,
-          //         color: Colors.black,
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          const SizedBox(height: 12),
-          // Text("Risk Level: $localCombined",
-          //     style: const TextStyle(color: Colors.black, fontSize: 16)),
-          // const SizedBox(height: 4),
-          // Text("Advice: $combinedRec",
-          //     style: const TextStyle(color: Colors.black, fontSize: 14)),
-
-          // const SizedBox(height: 20),
-
-          // 🔹 Personalized Health Recommendations
-          const Row(
-            children: [
-              Icon(Icons.lightbulb, color: Colors.black),
-              SizedBox(width: 8),
-              Text(
+Widget _buildCombinedRiskCard(String localCombined, String combinedRec) {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ✅ Fixed Row overflow by using Expanded
+        Row(
+          children: const [
+            Icon(Icons.lightbulb, color: Colors.black),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
                 "Personalized Health Recommendations",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // ⬇️ Changed: removed background color, text in black
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            child: const Text(
-              "Official Government Guidelines: Based on CPCB and Kerala State Health Department recommendations.",
-              style: TextStyle(
-                color: Colors.black, // ✅ black text
-                fontSize: 13,
+                softWrap: true,
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          child: const Text(
+            "Official Government Guidelines: Based on CPCB and Kerala State Health Department recommendations.",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 13,
+            ),
           ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 16),
 
-          // Wrap(
-          //   spacing: 22,
-          //   runSpacing: 22,
-          //   children: [
-          //     _buildRecommendationCard(Icons.check_circle,
-          //         "Perfect air quality - enjoy all outdoor activities"),
-          //     _buildRecommendationCard(Icons.directions_run,
-          //         "Great time for outdoor exercise and sports"),
-          //     _buildRecommendationCard(Icons.open_in_new,
-          //         "Open windows to let fresh air in"),
-          //     _buildRecommendationCard(Icons.child_friendly,
-          //         "Safe conditions for children to play outside"),
-          //   ],
-            
-          // ),
-          Wrap(
-            spacing: 22,
-            runSpacing: 22,
-            children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 2 - 33, // adjust spacing
-                child: _buildRecommendationCard(Icons.check_circle,
-                    "Perfect air quality - enjoy all outdoor activities"),
-              ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 2 - 33,
-                child: _buildRecommendationCard(Icons.directions_run,
-                    "Great time for outdoor exercise and sports"),
-              ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 2 - 33,
-                child: _buildRecommendationCard(Icons.open_in_new,
-                    "Open windows to let fresh air in"),
-              ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 2 - 33,
-                child: _buildRecommendationCard(Icons.child_friendly,
-                    "Safe conditions for children to play outside"),
-              ),
-            ],
-          )
-
-        ],
-      ),
-    );
-  }
+        // ✅ Wrap for recommendation cards (no hard widths)
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _buildRecommendationCard(
+                Icons.check_circle, "Perfect air quality - enjoy all outdoor activities"),
+            _buildRecommendationCard(
+                Icons.directions_run, "Great time for outdoor exercise and sports"),
+            _buildRecommendationCard(
+                Icons.open_in_new, "Open windows to let fresh air in"),
+            _buildRecommendationCard(
+                Icons.child_friendly, "Safe conditions for children to play outside"),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
 
 

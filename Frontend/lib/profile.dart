@@ -429,7 +429,8 @@ Widget build(BuildContext context) {
           "Profile",
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'poppins',)
+            fontSize: 22,
+            fontWeight: FontWeight.bold,)
           ),
         centerTitle: true,
         backgroundColor: Colors.teal,

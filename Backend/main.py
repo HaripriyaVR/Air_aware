@@ -370,6 +370,10 @@ def get_forecast_data():
             response = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key=s3_key)
             data = json.loads(response['Body'].read().decode('utf-8'))
 
+            print(f"\n--- Raw S3 data for {sensor} ---")
+            print(json.dumps(data, indent=2))
+            print("-----------------------------\n")
+
             if not isinstance(data, dict) or 'dates' not in data or 'gases' not in data:
                 forecasts[sensor] = {"error": "Invalid data structure"}
                 continue

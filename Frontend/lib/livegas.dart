@@ -290,7 +290,12 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
       
       appBar: AppBar(
         backgroundColor: Colors.teal,
-        title: const Text(""),
+        title: const Text("Real Time Monitoring",style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),),
+        
         centerTitle: true,
       ),
       drawer: SidePanel(
@@ -307,15 +312,6 @@ Widget buildSensorCard(Map<String, dynamic> sensor) {
               child: Center(
                 child: Column(
                   children: [
-                    const Text(
-                      "Real Time Monitoring",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.teal,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
                       child: Wrap(

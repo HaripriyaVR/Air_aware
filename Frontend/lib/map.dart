@@ -811,7 +811,7 @@ Set<Marker> _buildMarkers() {
       appBar: AppBar(
         backgroundColor: Colors.teal,
         title: !_isSearching
-            ? const Text("Sensor Map", style: TextStyle(color: Colors.white))
+            ? const Text("Sensor Map", style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.white))
             : SizedBox(
                 height: 48,
                 child: Container(

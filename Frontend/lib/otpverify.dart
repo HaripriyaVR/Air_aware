@@ -119,7 +119,7 @@ Widget build(BuildContext context) {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [Colors.blue.withOpacity(0.4), Colors.white.withOpacity(0)],
+                  colors: [Colors.teal.withOpacity(0.4), Colors.white.withOpacity(0)],
                   radius: 0.6,
                 ),
               ),
@@ -136,7 +136,7 @@ Widget build(BuildContext context) {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [Colors.green.withOpacity(0.4), Colors.green.withOpacity(0)],
+                  colors: [Colors.teal.withOpacity(0.4), Colors.teal.withOpacity(0)],
                   radius: 0.5,
                 ),
               ),
@@ -151,7 +151,7 @@ Widget build(BuildContext context) {
               children: [
                 const SizedBox(height: 200),
                 const Text(
-                  "We are fetching your OTP on your number",
+                  "Enter the code you received via SMS.",
                   style: TextStyle(fontSize: 16, color: Colors.black87),
                   textAlign: TextAlign.center,
                 ),
@@ -185,9 +185,9 @@ Widget build(BuildContext context) {
                     fieldHeight: 50,
                     fieldWidth: 50,
                     borderRadius: BorderRadius.circular(20),
-                    activeColor: Colors.green,
-                    selectedColor: Colors.green,
-                    inactiveColor: Colors.lightGreen,
+                    activeColor: Colors.teal,
+                    selectedColor: Colors.teal,
+                    inactiveColor: Colors.teal,
                   ),
                   onChanged: (value) => setState(() => otpCode = value),
                   onCompleted: (value) {
@@ -204,7 +204,7 @@ Widget build(BuildContext context) {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : verifyOtp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.teal,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -219,7 +219,7 @@ Widget build(BuildContext context) {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text("Submit", style: TextStyle(color: Colors.white)),
+                        : const Text("Verify", style: TextStyle(color: Colors.white)),
                   ),
                 ),
                 const SizedBox(height: 40),

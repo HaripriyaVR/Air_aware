@@ -111,7 +111,7 @@ class _SupportPageState extends State<SupportPage> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Colors.teal,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -155,7 +155,7 @@ class _SupportPageState extends State<SupportPage> {
                       controller: _caseController,
                       maxLines: 5,
                       decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.report_problem_outlined, color: Colors.blue),
+                        prefixIcon: const Icon(Icons.report_problem_outlined, color: Colors.teal),
                         hintText: "Describe your issue...",
                         alignLabelWithHint: true,
                         filled: true,
@@ -181,7 +181,7 @@ class _SupportPageState extends State<SupportPage> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.green,
+                          backgroundColor: Colors.teal,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

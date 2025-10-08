@@ -144,14 +144,14 @@ class ContactUsPage extends StatelessWidget {
                         context,
                         icon: FontAwesomeIcons.instagram,
                         color: const Color(0xFFE4405F),
-                        url: 'https://www.instagram.com/your_instagram/',
+                        url: 'https://www.instagram.com/aiiot_adishankara?igsh=aXY4bXQ2cjVhYWM2',
                         tooltip: 'Instagram',
                       ),
                       _buildSocialMediaIcon(
                         context,
                         icon: FontAwesomeIcons.linkedinIn,
                         color: const Color(0xFF0077B5),
-                        url: 'https://www.linkedin.com/in/your_linkedin/',
+                        url: 'https://www.linkedin.com/in/aiiot-asiet-b22302308/',
                         tooltip: 'LinkedIn',
                       ),
                     ],
@@ -162,7 +162,7 @@ class ContactUsPage extends StatelessWidget {
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Text(
-                      "App Version: 1.0.0 | User ID: #A1B2C3D4",
+                      "",
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600, letterSpacing: 0.3),
                     ),
                   ),

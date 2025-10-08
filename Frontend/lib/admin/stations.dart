@@ -233,7 +233,7 @@ class _LiveGasPageState extends State<LiveGasPage> {
         selectedSensorId != null ? liveData[selectedSensorId] : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Devices")),
+      appBar: AppBar(title: const Text("Devices"),backgroundColor:  Colors.teal),
       body: Column(
         children: [
           // ✅ Station buttons

@@ -40,7 +40,7 @@ class _InlineDropdownState extends State<InlineDropdown> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Colors.green, width: 2),
+              border: Border.all(color: Colors.teal, width: 2),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -53,7 +53,7 @@ class _InlineDropdownState extends State<InlineDropdown> {
                 ),
                 Icon(
                   expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                  color: Colors.green,
+                  color: Colors.teal,
                 ),
               ],
             ),
@@ -289,7 +289,7 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
         return CheckboxListTile(
           title: Text(symptom),
           value: Symptoms.contains(symptom),
-          activeColor: Colors.green, // Set checkbox color to green
+          activeColor: Colors.teal, // Set checkbox color to green
           onChanged: (bool? value) {
             setState(() {
               if (value == true) {
@@ -310,94 +310,104 @@ class _QuestionnairePageState extends State<QuestionnairePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Remove background shade
+        backgroundColor: Colors.teal, // Remove background shade
         elevation: 0, // Remove shadow
       ),
 
-      body: Stack(
-        children: [
-          // const BackgroundDesign(), // Background layer
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Center( // to keep it centered
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.9, // 90% width
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Health Questionnaire",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
+      body: SafeArea(
+  child: GestureDetector(
+    onTap: () => FocusScope.of(context).unfocus(), // dismiss keyboard
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 30, // ensure padding for keyboard
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Health Questionnaire",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  buildDropdown(
+                    title: '1. What is your age group?',
+                    value: AgeGroup,
+                    options: AgeOptions,
+                    onChanged: (val) => setState(() => AgeGroup = val),
+                  ),
+                  buildDropdown(
+                    title: '2. What is your gender?',
+                    value: Gender,
+                    options: GenderOptions,
+                    onChanged: (val) => setState(() => Gender = val),
+                  ),
+                  buildDropdown(
+                    title: '3. Do you have any respiratory issues?',
+                    value: RespiratoryIssue,
+                    options: yesNo,
+                    onChanged: (val) => setState(() => RespiratoryIssue = val),
+                  ),
+                  buildDropdown(
+                    title: '4. Smoking History',
+                    value: SmokingHistory,
+                    options: ['Non-Smoker', 'Occasional Smoker', 'Regular Smoker'],
+                    onChanged: (val) => setState(() => SmokingHistory = val),
+                  ),
+                  buildDropdown(
+                    title: '5. Living Environment',
+                    value: Environment,
+                    options: EnvironmentOptions,
+                    onChanged: (val) => setState(() => Environment = val),
+                  ),
+                  buildCheckboxList(),
+                  buildDropdown(
+                    title: '7. Occupational Exposure',
+                    value: Occupation,
+                    options: OccupationOptions,
+                    onChanged: (val) => setState(() => Occupation = val),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        widget.isEditing ? "Update" : "Submit",
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    buildDropdown(
-                      title: '1. What is your age group?',
-                      value: AgeGroup,
-                      options: AgeOptions,
-                      onChanged: (val) => setState(() => AgeGroup = val),
-                    ),
-                    buildDropdown(
-                      title: '2. What is your gender?',
-                      value: Gender,
-                      options: GenderOptions,
-                      onChanged: (val) => setState(() => Gender = val),
-                    ),
-                    buildDropdown(
-                      title: '3. Do you have any respiratory issues?',
-                      value: RespiratoryIssue,
-                      options: yesNo,
-                      onChanged: (val) => setState(() => RespiratoryIssue = val),
-                    ),
-                    buildDropdown(
-                      title: '4. Smoking History',
-                      value: SmokingHistory,
-                      options: ['Non-Smoker', 'Occasional Smoker', 'Regular Smoker'],
-                      onChanged: (val) => setState(() => SmokingHistory = val),
-                    ),
-                    buildDropdown(
-                      title: '5. Living Environment',
-                      value: Environment,
-                      options: EnvironmentOptions,
-                      onChanged: (val) => setState(() => Environment = val),
-                    ),
-                    buildCheckboxList(),
-                    buildDropdown(
-                      title: '7. Occupational Exposure',
-                      value: Occupation,
-                      options: OccupationOptions,
-                      onChanged: (val) => setState(() => Occupation = val),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: Text(
-                          widget.isEditing ? "Update" : "Submit",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      )
+        );
+      },
+    ),
+  ),
+),
     );
   }
 }

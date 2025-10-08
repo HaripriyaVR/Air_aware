@@ -118,7 +118,7 @@ Widget build(BuildContext context) {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
-                colors: [Colors.blue.withOpacity(0.4), Colors.white.withOpacity(0)],
+                colors: [Colors.teal.withOpacity(0.4), Colors.white.withOpacity(0)],
                 radius: 0.6,
               ),
             ),
@@ -135,7 +135,7 @@ Widget build(BuildContext context) {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
-                colors: [Colors.green.withOpacity(0.4), Colors.green.withOpacity(0)],
+                colors: [Colors.teal.withOpacity(0.4), Colors.teal.withOpacity(0)],
                 radius: 0.5,
               ),
             ),
@@ -180,20 +180,20 @@ Widget build(BuildContext context) {
                     counterText: "",
                     prefixText: '+91 ',
                     labelText: 'Enter Phone Number',
-                    labelStyle: const TextStyle(color: Colors.green),
+                    labelStyle: const TextStyle(color: Colors.teal),
                     hintText: '10-digit mobile number',
                     hintStyle: const TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Colors.green),
+                      borderSide: const BorderSide(color: Colors.teal),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Colors.green),
+                      borderSide: const BorderSide(color: Colors.teal),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Colors.green, width: 2),
+                      borderSide: const BorderSide(color: Colors.teal, width: 2),
                     ),
                   ),
                 ),
@@ -221,7 +221,7 @@ Widget build(BuildContext context) {
                   child: ElevatedButton(
                     onPressed: checkAndSendOtp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.teal,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

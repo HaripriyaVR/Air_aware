@@ -28,8 +28,8 @@ class ViewAssessmentsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("User Health Assessments"),
-        backgroundColor: Colors.deepPurple,
+        title: const Text("Health Assessments"),
+        backgroundColor: Colors.teal,
         centerTitle: true,
         elevation: 4,
       ),

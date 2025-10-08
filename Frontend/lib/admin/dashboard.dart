@@ -41,7 +41,7 @@ class AdminDashboardPage extends StatelessWidget {
         title: const Text("Admin Dashboard"),
         centerTitle: true,
         elevation: 4,
-        backgroundColor: Colors.indigo,
+        backgroundColor: Colors.teal,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

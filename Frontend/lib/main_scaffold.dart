@@ -44,7 +44,7 @@ Widget build(BuildContext context) {
     bottomNavigationBar: BottomNavigationBar(
       backgroundColor: Colors.white,
       currentIndex: currentIndex,
-      selectedItemColor: Colors.blue,
+      selectedItemColor: Colors.teal,
       unselectedItemColor: Colors.black,
       type: BottomNavigationBarType.fixed,
       items: navItems,

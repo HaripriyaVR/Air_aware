@@ -11,7 +11,7 @@ class ViewSupportPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Support Tickets"),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.teal,
         centerTitle: true,
         elevation: 4,
       ),

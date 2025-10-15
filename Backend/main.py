@@ -41,15 +41,20 @@ TWILIO_VERIFY_SID = os.getenv("TWILIO_VERIFY_SID", "")
 twilio_client = TwilioClient(TWILIO_SID, TWILIO_AUTH_TOKEN)
 
 # ───── Boto3 Setup ─────
-if not (AWS_ACCESS_KEY and AWS_SECRET_KEY):
-    raise RuntimeError("AWS credentials missing in .env")
+# Prefer instance profile / IAM role if explicit credentials are not provided.
+if AWS_ACCESS_KEY and AWS_SECRET_KEY:
+    session = boto3.Session(
+        aws_access_key_id=AWS_ACCESS_KEY,
+        aws_secret_access_key=AWS_SECRET_KEY,
+        region_name=AWS_REGION,
+    )
+    log.info("Using explicit AWS credentials from environment variables")
+else:
+    # Do not raise here; allow boto3 to use instance profile or other configured credentials
+    log.warning("AWS credentials not set in environment; falling back to default boto3 session (instance profile or environment).")
+    session = boto3.Session(region_name=AWS_REGION)
 
-session = boto3.Session(
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY,
-    region_name=AWS_REGION,
-)
-
+# Create clients/resources. These calls will use the session's credentials (explicit or instance profile).
 s3_client = session.client("s3")
 dynamodb = session.resource("dynamodb")
 table = dynamodb.Table(DDB_TABLE_NAME)
@@ -496,4 +501,5 @@ if __name__== "__main__":
     # Register API blueprint with /api prefix
     app.register_blueprint(api, url_prefix="/api")
 
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(debug=True, host="0.0.0.0", port=port)
